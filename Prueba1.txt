@@ -1,0 +1,30 @@
+program  
+var
+ real n1,n2,n3
+ integer a,b,i
+ string cadena, s
+endvar
+
+-/soyyyy comentarioooooooo/-
+beginp 
+i:=1	
+a:=15
+n1:=999.999
+n2:=.999
+n3:=99.
+
+if i=15 then
+	cadena:="ailinmerloailinmerloailin"
+	i:=16
+else
+	repeat 
+		i:=5 + b
+	until a<7
+
+endif
+
+
+
+
+endp
+

@@ -1,0 +1,33 @@
+<programa> ::= <PROGRAM> <VAR> <declaraciones> <ENDVAR> <BEGINP> <sentencias> <ENDP>
+<declaraciones> ::= <declaracion> | <declaracion><declaraciones>
+<declaracion> ::= <tipo_var> <DEF_TIPO> <ID> | <tipo_var> <DEF_TIPO> <lista_var> | <CORCH_A><lista_tipos><CORCH_C> <DEF_TIPO> <CORCH_A><lista_var><CORCH_C>
+<lista_tipos> ::= <tipo_var>| <lista_tipos> <COMA> <tipo_var>
+<tipo_var> ::= <REAL> | <INTEGER> | <STRING>
+<lista_var> ::= <ID> | <lista_var> <COMA> <ID>
+
+<sentencias> ::= <sentencia> | <sentencias><sentencia>
+<sentencia> ::= <asignacion> | <decision> | <iteracion> | <ciclo> | <ciclo_especial> 
+
+<asignacion>::= <ID> <OP_AS> <expresion> 
+<decision>::= <IF> <condicion> <THEN> <sentencias> <ELSE> <sentencias> <ENDIF>| <IF> <condicion> <THEN> <sentencias> <ENDIF>
+<iteracion>::= <FOR> <iterador> <DO> <sentencias> <ENDFOR>
+<ciclo>::= <WHILE><condicion> <DO> <sentencias> <ENDWHILE> 
+<ciclo_especial>::=<WHILE><iterador><DO><sentencias><ENDWHILE>
+
+<condicion>::=  <comparacion>  | <condicion> <OP_LOG> <comparacion> | <OP_NOT> <comparacion>
+<comparacion>::=  <P_A><expresion><OP_COMPARACION><expresion><P_A>  
+
+<iterador>::= <ID><IN><lista_expresiones> | <ID> <TO> <expresion>
+<lista_expresiones>::= <CORCH_A><expresiones><CORCH_C>
+<expresiones>::= <expresion>|<expresiones><COMA><expresion>
+
+<expresion>::= <expresion> <OP_SURES> <termino> | <termino>
+<termino>::= <termino> <OP_MULTDIV> <factor> |<factor>
+<factor>::= <P_A><expresion><P_C> | <ID> |<constante> | <funcion_take>
+
+<funcion_take>::= <TAKE><P_A><operador><PUNTO_COMA><CONST_INT><PUNTO_COMA><lista_constantes_ent><P_C>
+<operador>::= <OP_SURES>|<OP_MULTDIV>
+<lista_constantes_ent>::= <CORCH_A><constantes_ent><CORCH_C>
+<constantes_ent>::= <CONST_INT>|<constantes_ent><COMA><CONST_INT>
+
+<constante>::= <CONST_INT> | <CONST_REAL> | <CONST_STR>

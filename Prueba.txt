@@ -1,0 +1,20 @@
+program  
+var
+ [real,integer]:[i,b]
+ string: n1,n2,n3
+endvar
+
+beginp 
+i:=1	
+if (i>15) and (i<10) then
+	cadena:="ailinmerloailinmerloailin"
+	i:=16
+else
+	while (a<7)
+        do
+		i:=5 + b
+	endwhile
+
+endif
+endp
+
