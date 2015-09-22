@@ -12,6 +12,11 @@ if (i>15) and (i<10) then
 else
 	while (a<7)
         do
+       	if a > 5 and b < 3 then
+       		cadena:="dentro del if"
+       	else
+       		cadena:="dentro del else"
+       	endif
 		i:=5 + b
 	endwhile
 
