@@ -1,0 +1,23 @@
+POSICION 		 NOMBRE 		 TIPO 		 VALOR 		 LONGITUD 
+0 				 i 				ID 			--- 			1 
+1 				 b 				ID 			--- 			1 
+2 				 n1 				ID 			--- 			2 
+3 				 n2 				ID 			--- 			2 
+4 				 n3 				ID 			--- 			2 
+5 				 1 				CONST_INT 			1 			1 
+6 				 15 				CONST_INT 			15 			2 
+7 				 10 				CONST_INT 			10 			2 
+8 				 cadena 				ID 			--- 			6 
+9 				 "ailinmerloailinmerloailin" 				CONST_STR 			"ailinmerloailinmerloailin" 			27 
+10 				 16 				CONST_INT 			16 			2 
+11 				 a 				ID 			--- 			1 
+12 				 7 				CONST_INT 			7 			1 
+13 				 3 				CONST_INT 			3 			1 
+14 				 "dentro del if" 				CONST_STR 			"dentro del if" 			15 
+15 				 "dentro del else" 				CONST_STR 			"dentro del else" 			17 
+16 				 5 				CONST_INT 			5 			1 
+17 				 2 				CONST_INT 			2 			1 
+18 				 35 				CONST_INT 			35 			2 
+19 				 32 				CONST_INT 			32 			2 
+20 				 x 				ID 			--- 			1 
+21 				 y 				ID 			--- 			1 

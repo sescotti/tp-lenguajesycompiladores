@@ -23,7 +23,9 @@ else
 
 endif
 
+take(*;3;2,3,32)
 
+while var IN [ 2+x, 3*x+2, 5*x-1, a, 2 ]
 
 
 endp

@@ -83,37 +83,59 @@ seccion_sentencias: 	{ printf("Inicio de Sentencias\n"); }
 						sentencias
 						ENDP;
 
-sentencias: 			sentencia | sentencias sentencia;
+sentencias: 			{ printf ("SENTENCIAS\n"); }
+						sentencia | sentencias sentencia;
 
-sentencia : 			asignacion | decision | ciclo | iteracion | ciclo_especial;
+sentencia : 			{ printf ("SENTENCIA\n"); }
+						asignacion | decision | ciclo_especial | ciclo | iteracion | funcion_take;
 
 asignacion: 			{ printf("ASIGNACION\n"); }
 						ID OP_AS expresion 
 
-decision:				{ printf("IF/ELSE\n"); }
-						IF  condicion THEN sentencias ELSE sentencias ENDIF |
+decision:				{ printf("IF\n"); }
+						IF condicion THEN 
+						sentencias 
+						ELSE 
+						{ printf("ELSE\n"); }
+						sentencias 
+						ENDIF 
+						{ printf("FIN_DE_IF\n"); }
+						|
 
 						{ printf("IF\n"); }
-						IF  condicion THEN sentencias ENDIF
+						IF  condicion THEN 
+						sentencias 
+						ENDIF
+						{ printf("FIN_DE_IF\n"); }
 
 ciclo: 					{ printf("CICLO\n"); }
 						WHILE condicion DO 
 						sentencias
-						ENDWHILE; 
+						ENDWHILE
+						{ printf("FIN_DE_CICLO\n"); }; 
 
-iteracion: 				{ printf("FOR\n"); }
-						FOR iterador DO sentencias ENDFOR;
-
-ciclo_especial: 		{ printf("CICLO ESPECIAL\n"); }
+ciclo_especial:			{ printf("CICLO_ESPECIAL\n"); }
 						WHILE iterador DO 
 						sentencias
-						ENDWHILE;
+						ENDWHILE
+						{ printf("FIN_DE_CICLO\n"); }; 
 
-condicion: 				comparacion | 
+iteracion: 				{ printf("FOR\n"); }
+						FOR iterador 
+						DO 
+						sentencias 
+						ENDFOR
+						{ printf("FIN_FOR\n"); }
+						;
+
+condicion: 				{ printf("COMPARACION\n"); }
+						comparacion |
 						condicion OP_LOG comparacion | 
+						{ printf("NEGACION COMPARACION\n"); }
 						OP_NOT comparacion;
 
-comparacion:  			P_A expresion OP_COMPARACION expresion P_C;
+comparacion:  			P_A condicion P_C |
+						expresion OP_COMPARACION expresion;
 
 iterador: 				ID IN lista_expresiones | ID TO expresion;
 
@@ -121,13 +143,19 @@ lista_expresiones: 		CORCH_A expresiones CORCH_C;
 
 expresiones: 			expresion | expresiones COMA expresion;
 
-expresion: 				termino |expresion OP_SURES termino ;
+expresion: 				termino | expresion OP_SURES termino ;
 
 termino: 				factor | termino OP_MULTDIV factor;
 
+funcion_take: 			{ printf("TAKE\n"); }
+						TAKE P_A 	operador PUNTO_COMA 
+									CONST_INT PUNTO_COMA expresiones P_C
+						{ printf("FIN_TAKE\n"); }
+									;
+						
+
 factor: 				P_A expresion P_C | ID | constante | funcion_take;
 
-funcion_take: 			TAKE P_A operador PUNTO_COMA CONST_INT PUNTO_COMA lista_constantes_ent P_C;
 
 %%
 int main(int argc,char *argv[])
@@ -147,6 +175,5 @@ int main(int argc,char *argv[])
 int yyerror(void)
 {
 	printf("Syntax Error\n");   
-	system ("Pause");
 	exit (1);
 }
