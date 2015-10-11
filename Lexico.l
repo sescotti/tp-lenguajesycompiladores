@@ -65,14 +65,33 @@ MULT_DIV	            ["*"|"/"]
 "and"        	{ return OP_LOG;}
 "or"        	{ return OP_LOG;}
 "not"        	{ return OP_NOT;}
-"WRITE"			  { return WRITE;}
-"READ"			  { return READ;}
+"write"			  { return WRITE;}
+"read"			  { return READ;}
 {ID}			    { printf("Encontre un ID %s\n", yytext);
                 inserta_TS("ID","---"); 
                 return ID;}
-{CONST_INT}		{ if(!validar_cota_int()) yyterminate(); inserta_TS("CONST_INT",yytext); return CONST_INT;}
-{CONST_STR}		{ inserta_TS("CONST_STR",yytext); return CONST_STR;}
-{CONST_REAL}	{ if(!validar_cota_real()) yyterminate(); inserta_TS("CONST_REAL",yytext); return CONST_REAL;}
+{CONST_INT}		{ 
+                if(!validar_cota_int()){
+                  yyterminate();
+                }
+                inserta_TS("CONST_INT",yytext); 
+                return CONST_INT;
+              }
+{CONST_STR}		{ 
+                if(!validar_longitud_string(yytext)) { 
+                  yyterminate(); 
+                }
+                inserta_TS("CONST_STR",yytext); 
+                return CONST_STR;
+              }
+{CONST_REAL}	{ 
+                if(!validar_cota_real()){
+                  yyterminate(); 
+                }
+                inserta_TS("CONST_REAL",yytext); 
+                return CONST_REAL;
+              }
+
 {COMENTARIOS}	{ printf("FLEX:Encontre comentario %s\n",yytext);  }
 "\n"      		{ ++numberLine; }
 "\t"		
@@ -100,6 +119,7 @@ int inserta_TS(char*,char*);
 
 int validar_cota_int();
 int validar_cota_real();
+int validar_longitud_string(char*);
 /***********************FIN DECLARACIONES********************************/
 
 /***********************INICIO VALIDACION DE COTAS***********************/
@@ -112,6 +132,22 @@ int  validar_cota_int()
 		return 0;
 	}
 	return 1;
+}
+
+
+int validar_longitud_string(char* texto){
+  char* p = texto;
+  int idx = 0;
+  while(idx < 30 && *p != '\n'){
+    p++;
+  }
+
+  if(p == '\n'){
+    printf("SINTAX ERROR: STRING EXCEDE MAXIMO DE 30 CARACTERES (%s)\n", texto);    
+    return 0;
+  }
+
+  return 1;
 }
 
 int  validar_cota_real()

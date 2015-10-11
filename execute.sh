@@ -1,8 +1,8 @@
 #!/bin/bash
 
 
-flex AL.l
-bison -dyv AS.y
+flex Lexico.l
+bison -dyv Sintactico.y
 
 gcc lex.yy.c y.tab.c -o TP
 

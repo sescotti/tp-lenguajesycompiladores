@@ -3,7 +3,8 @@ var
  [real,integer]:[i,b]
  string: n1,n2,n3
 endvar
-
+-/ alguna especie de comentario /-
+-/ un comentario -/un comentario anidado/- /-
 beginp 
 i:=1	
 if i>=15 and i=<10 then
@@ -20,14 +21,19 @@ else
 		i:=5 + b
 	endwhile
 
+  write "algo"
+  read lo_que_de
+
   take(+;3;2,35,2,1,32)  
   take(*;3;2+x,35*y,(2+x)*5,1,a)
-  take(*;3;2+x,35*y,(2+x)*5,1,a, take(+;3;2,35,2,1,32))
+  take(*;3;2+x,35*y,(2+x)*5,1,a,take(+;3;2,35,2,1,32))
 
 endif
 
 while var in [ 2, x, 1, a, 2 ]
 do
+  
   take(+;3;2,35,2,1,32)
+
 endwhile
 endp

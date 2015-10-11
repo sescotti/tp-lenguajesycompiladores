@@ -71,7 +71,8 @@ constante: 				CONST_INT | CONST_REAL | CONST_STR;
 
 lista_var : 			ID | lista_var COMA ID;
 
-operador: 				OP_SURES | OP_MULTDIV;
+operador: 				{ printf("Operador\n"); }
+						OP_SURES | OP_MULTDIV;
 
 lista_constantes_ent: 	CORCH_A constantes_ent CORCH_C;
 
@@ -87,7 +88,15 @@ sentencias: 			{ printf ("SENTENCIAS\n"); }
 						sentencia | sentencias sentencia;
 
 sentencia : 			{ printf ("SENTENCIA\n"); }
-						asignacion | decision | ciclo_especial | ciclo | iteracion | funcion_take;
+						funcion_take | asignacion | decision | ciclo | iteracion | write | read;
+
+write: 					{ printf ("WRITE\n");}
+						WRITE atributo
+						{ printf ("FIN_WRITE\n");};
+
+read: 					{ printf ("READ\n");}
+						READ ID
+						{ printf ("FIN_READ\n");}
 
 asignacion: 			{ printf("ASIGNACION\n"); }
 						ID OP_AS expresion 
@@ -100,6 +109,7 @@ decision:				{ printf("IF\n"); }
 						sentencias 
 						ENDIF 
 						{ printf("FIN_DE_IF\n"); }
+						
 						|
 
 						{ printf("IF\n"); }
@@ -114,12 +124,6 @@ ciclo: 					{ printf("CICLO\n"); }
 						ENDWHILE
 						{ printf("FIN_DE_CICLO\n"); }; 
 
-ciclo_especial:			{ printf("CICLO_ESPECIAL\n"); }
-						WHILE iterador DO 
-						sentencias
-						ENDWHILE
-						{ printf("FIN_DE_CICLO\n"); }; 
-
 iteracion: 				{ printf("FOR\n"); }
 						FOR iterador 
 						DO 
@@ -128,16 +132,18 @@ iteracion: 				{ printf("FOR\n"); }
 						{ printf("FIN_FOR\n"); }
 						;
 
-condicion: 				{ printf("COMPARACION\n"); }
+condicion: 				{ printf("CONDICION\n"); }
 						comparacion |
 						condicion OP_LOG comparacion | 
 						{ printf("NEGACION COMPARACION\n"); }
-						OP_NOT comparacion;
+						OP_NOT comparacion | iterador;
 
-comparacion:  			P_A condicion P_C |
+comparacion:  			{ printf("COMPARACION\n"); }
+						P_A condicion P_C |
 						expresion OP_COMPARACION expresion;
 
-iterador: 				ID IN lista_expresiones | ID TO expresion;
+iterador: 				{ printf("ITERADOR\n"); }
+						ID IN lista_expresiones;
 
 lista_expresiones: 		CORCH_A expresiones CORCH_C;
 
@@ -148,13 +154,14 @@ expresion: 				termino | expresion OP_SURES termino ;
 termino: 				factor | termino OP_MULTDIV factor;
 
 funcion_take: 			{ printf("TAKE\n"); }
-						TAKE P_A 	operador PUNTO_COMA 
-									CONST_INT PUNTO_COMA expresiones P_C
+						TAKE P_A operador PUNTO_COMA 
+								CONST_INT PUNTO_COMA expresiones P_C
 						{ printf("FIN_TAKE\n"); }
 									;
 						
+atributo: 				constante | ID
 
-factor: 				P_A expresion P_C | ID | constante | funcion_take;
+factor: 				P_A expresion P_C | atributo | funcion_take;
 
 
 %%
