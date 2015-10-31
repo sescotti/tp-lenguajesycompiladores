@@ -26,9 +26,10 @@ else
   write "algo"
   read lo_que_de
 
-  take(+;3;2,35,2,1,32)  
-  take(*;3;2+x,35*y,(2+x)*5,1,a)
-  take(*;3;2+x,35*y,(2+x)*5,1,a,1)
+  take(+;3;[])
+  take(+;3;[2,35,2,1,32])  
+  take(*;3;[2+x,35*y,(2+x)*5,1,a])
+  take(*;3;[2+x,35*y,(2+x)*5,1,a,1])
 
 endif
 
@@ -39,6 +40,6 @@ endif
 
 while a in [ 2, x, 1, a, 2 ]
 do
-  take(+;3;2,35,2,1,32)
+  take(+;3;[2,35,2,1,32])
 endwhile
 endp

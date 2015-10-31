@@ -77,10 +77,6 @@ lista_var : 			ID | lista_var COMA ID;
 operador: 				{ printf("Operador\n"); }
 						OP_SURES | OP_MULTDIV;
 
-lista_constantes_ent: 	CORCH_A constantes_ent CORCH_C;
-
-constantes_ent: 		CONST_INT | constantes_ent COMA CONST_INT;
-
 seccion_sentencias: 	{ printf("Inicio de Sentencias\n"); }
 						
 						BEGINP 
@@ -149,8 +145,10 @@ comparativo: 			{ printf("COMPARATIVO\n"); }
 iterador: 				{ printf("ITERADOR\n"); }
 						ID IN lista_expresiones;
 
-lista_expresiones: 		CORCH_A expresiones CORCH_C;
+lista_expresiones: 		CORCH_A contenido_l_expr; 
 
+contenido_l_expr: 		CORCH_C | expresiones CORCH_C ;
+						
 expresiones: 			expresion | expresiones COMA expresion;
 
 expresion: 				termino | expresion OP_SURES termino ;
@@ -159,7 +157,7 @@ termino: 				factor | termino OP_MULTDIV factor;
 
 funcion_take: 			{ printf("TAKE\n"); }
 						TAKE P_A operador PUNTO_COMA 
-								CONST_INT PUNTO_COMA expresiones P_C
+								CONST_INT PUNTO_COMA lista_expresiones P_C
 						{ printf("FIN_TAKE\n"); }
 						;
 						
