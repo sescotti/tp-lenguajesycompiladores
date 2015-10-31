@@ -6,6 +6,7 @@ int yystopparser=0;
 FILE  *yyin;
 
 %}
+
 %token PROGRAM
 %token VAR ENDVAR
 %token BEGINP ENDP
@@ -88,7 +89,7 @@ sentencias: 			{ printf ("SENTENCIAS\n"); }
 						sentencia | sentencias sentencia;
 
 sentencia : 			{ printf ("SENTENCIA\n"); }
-						funcion_take | asignacion | decision | ciclo | iteracion | write | read;
+						asignacion | decision | ciclo | iteracion | write | read | funcion_take;
 
 write: 					{ printf ("WRITE\n");}
 						WRITE atributo
@@ -100,23 +101,22 @@ read: 					{ printf ("READ\n");}
 
 asignacion: 			{ printf("ASIGNACION\n"); }
 						ID OP_AS expresion 
+						{ printf("FIN_ASIGNACION\n"); }
 
 decision:				{ printf("IF\n"); }
 						IF condicion THEN 
-						sentencias 
+						sentencias
+						cuerpo_decision;
+
+cuerpo_decision: 		{ printf("ELSE\n"); }
 						ELSE 
-						{ printf("ELSE\n"); }
 						sentencias 
 						ENDIF 
-						{ printf("FIN_DE_IF\n"); }
-						
+						{ printf("FIN_DE_IF_CON_ELSE\n"); }
 						|
-
-						{ printf("IF\n"); }
-						IF  condicion THEN 
-						sentencias 
 						ENDIF
 						{ printf("FIN_DE_IF\n"); }
+
 
 ciclo: 					{ printf("CICLO\n"); }
 						WHILE condicion DO 
@@ -136,11 +136,13 @@ condicion: 				{ printf("CONDICION\n"); }
 						comparacion |
 						condicion OP_LOG comparacion | 
 						{ printf("NEGACION COMPARACION\n"); }
-						OP_NOT comparacion | iterador;
+						OP_NOT comparacion;
 
 comparacion:  			{ printf("COMPARACION\n"); }
-						P_A condicion P_C |
-						expresion OP_COMPARACION expresion;
+						expresion OP_COMPARACION comparativo;
+
+comparativo: 			{ printf("COMPARATIVO\n"); }
+						expresion | lista_expresiones;
 
 iterador: 				{ printf("ITERADOR\n"); }
 						ID IN lista_expresiones;
@@ -157,11 +159,11 @@ funcion_take: 			{ printf("TAKE\n"); }
 						TAKE P_A operador PUNTO_COMA 
 								CONST_INT PUNTO_COMA expresiones P_C
 						{ printf("FIN_TAKE\n"); }
-									;
+						;
 						
 atributo: 				constante | ID
 
-factor: 				P_A expresion P_C | atributo | funcion_take;
+factor: 				P_A expresion P_C | atributo;
 
 
 %%
@@ -179,7 +181,7 @@ int main(int argc,char *argv[])
   return 0;
 }
 
-int yyerror(void)
+int yyerror(char const *line)
 {
 	printf("Syntax Error\n");   
 	exit (1);

@@ -1,4 +1,4 @@
-program  
+program 
 var
  [real,integer]:[i,b]
  string: n1,n2,n3
@@ -9,7 +9,8 @@ beginp
 i:=1	
 if i>=15 and i=<10 then
 	cadena:="ailinmerloailinmerloailin"
-	i:=16
+  cadena:="ailinmerloailinmerloail"
+	i:=16  
 else
 	while a=<7
         do
@@ -26,14 +27,17 @@ else
 
   take(+;3;2,35,2,1,32)  
   take(*;3;2+x,35*y,(2+x)*5,1,a)
-  take(*;3;2+x,35*y,(2+x)*5,1,a,take(+;3;2,35,2,1,32))
+  take(*;3;2+x,35*y,(2+x)*5,1,a,1)
 
 endif
 
-while var in [ 2, x, 1, a, 2 ]
-do
-  
-  take(+;3;2,35,2,1,32)
+if cacona==2 then
+    w:=2
+endif
 
+
+while a in [ 2, x, 1, a, 2 ]
+do
+  take(+;3;2,35,2,1,32)
 endwhile
 endp

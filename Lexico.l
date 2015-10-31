@@ -13,7 +13,7 @@ int numberLine, numberChar;
 
 DIGITO					[0-9]
 LETRA					[a-zA-Z]
-CONST_STR               \".{1,30}\"
+CONST_STR               \".*\"
 COMENTARIOS             \-\/({LETRA}|{DIGITO}|.)+\/\-
 CONST_REAL              {DIGITO}*"."{DIGITO}+|{DIGITO}+"."{DIGITO}* 
 CONST_INT               {DIGITO}+
@@ -42,7 +42,7 @@ MULT_DIV	            ["*"|"/"]
 "while"	      { return WHILE;}
 "do"	        { return DO;}
 "endwhile"  	{ return ENDWHILE;}
-"in"	        { return IN;}
+"in"	        { return OP_COMPARACION;}
 "repeat"		  { return REPEAT;}
 "until"			  { return UNTIL;}
 ":="			    { return OP_AS; }
@@ -138,11 +138,11 @@ int  validar_cota_int()
 int validar_longitud_string(char* texto){
   char* p = texto;
   int idx = 0;
-  while(idx < 30 && *p != '\n'){
+  while(idx++ < 30 && *p != '\n'){
     p++;
   }
 
-  if(p == '\n'){
+  if(*p != '\n'){
     printf("SINTAX ERROR: STRING EXCEDE MAXIMO DE 30 CARACTERES (%s)\n", texto);    
     return 0;
   }
