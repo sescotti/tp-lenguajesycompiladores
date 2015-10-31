@@ -12,7 +12,8 @@ if i>=15 and i=<10 then
   cadena:="ailinmerloailinmerloail"
 	i:=16  
 else
-	while a=<7
+	
+  while a=<7
         do
         if i>=15 and i=<3 or i=<a then
        	  cadena:="dentro del if"++"otro texto"
