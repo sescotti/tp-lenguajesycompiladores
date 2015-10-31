@@ -15,7 +15,7 @@ else
 	while a=<7
         do
         if i>=15 and i=<3 or i=<a then
-       	  cadena:="dentro del if"
+       	  cadena:="dentro del if"++"otro texto"
        	else
        		cadena:="dentro del else"
        	endif

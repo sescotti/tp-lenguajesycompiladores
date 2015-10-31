@@ -68,7 +68,9 @@ lista_tipos : 			tipo_var | lista_tipos COMA tipo_var;
 
 tipo_var : 				REAL | INTEGER | STRING;
 
-constante: 				CONST_INT | CONST_REAL | CONST_STR;
+constante: 				CONST_INT | CONST_REAL | final_string;
+
+final_string:			CONST_STR | CONST_STR CONCAT_STRING CONST_STR
 
 lista_var : 			ID | lista_var COMA ID;
 
