@@ -6,7 +6,7 @@
 FILE  *yyin;
 int yylval;
 float yyfval;
-int numberLine, numberChar;
+extern int numberLine = 1, numberChar;
  typedef struct{
         int posicion;
         char nombre[30];
@@ -78,28 +78,28 @@ MULT_DIV	            ["*"|"/"]
 "write"			  { return WRITE;}
 "read"			  { return READ;}
 {ID}			    { printf("Encontre un ID %s\n", yytext);
-                inserta_TS("ID","---"); 
-				      printf("ID Tanto:%s yylval:%d \n", yytext,yylval);
+                yylval = inserta_TS("ID","---"); 
+				        printf("ID Tanto:%s yylval:%d \n", yytext, yylval);
                 return ID;}
 {CONST_INT}		{ 
                 if(!validar_cota_int()){
                   yyterminate();
                 }
-                inserta_TS("CONST_INT",yytext); 
+                yylval = inserta_TS("CONST_INT",yytext); 
                 return CONST_INT;
               }
 {CONST_STR}		{ 
                 if(!validar_longitud_string(yytext)) { 
                   yyterminate(); 
                 }
-                inserta_TS("CONST_STR",yytext); 
+                yylval = inserta_TS("CONST_STR",yytext); 
                 return CONST_STR;
               }
 {CONST_REAL}	{ 
                 if(!validar_cota_real()){
                   yyterminate(); 
                 }
-                inserta_TS("CONST_REAL",yytext); 
+                yylval = inserta_TS("CONST_REAL",yytext); 
                 return CONST_REAL;
               }
 
@@ -118,7 +118,7 @@ MULT_DIV	            ["*"|"/"]
 int cant_entradas = 0;
 FILE* pf_TS;
 
-int busca_en_TS(char*);
+extern int busca_en_TS(char*);
 int graba_TS();
 int inserta_TS(char*,char*);
 
@@ -157,9 +157,8 @@ int validar_longitud_string(char* texto){
 
 int validar_cota_real()
 {
-	int valor = atoi(yytext);
-	if(valor > 4294967295 || valor < -4294967296)
-	{
+	int valor = atof(yytext);
+	if(valor > 4294967295 || valor < -4294967296)	{
 		printf("SINTAX ERROR: REAL OVERFLOW\n");		
 		return 0;
 	}
@@ -169,65 +168,64 @@ int validar_cota_real()
 
 /***********************INICIO TABLA DE SIMBOLOS************************/
 //Buscamos que no la hayamos guardado
-int busca_en_TS(char* nombre)
-{
-    int i;
-    for(i = 0; i<cant_entradas; i++)
-    {
-          if(!strcmp(tabla_simb[i].nombre, nombre))
-          {
-                 return i;
-          }
+int busca_en_TS(char* nombre) {
+
+    for(int i = 0; i<cant_entradas; i++) {
+        if(!strcmp(tabla_simb[i].nombre, nombre)){
+               return i;
+        }
     }
     
     return -1;
 }
 
 
-int inserta_TS(char* tipo,char* valor)
-{
-	 if((yylval = busca_en_TS(yytext)) == -1)
-     {
-		TS_reg reg;
-		strcpy(reg.nombre, yytext);
-		strcpy(reg.tipo, tipo);
-		strcpy(reg.valor, valor);
-		reg.longitud = strlen(yytext);
-		reg.posicion = cant_entradas;
-		tabla_simb[cant_entradas++] = reg;
-		
-		return yylval = cant_entradas-1;
-	 }
-	 return yylval;
+int inserta_TS(char* tipo,char* valor){
+
+    int posicion;
+
+    if((posicion = busca_en_TS(yytext)) == -1) {
+
+      TS_reg reg;
+      strcpy(reg.nombre, yytext);
+      strcpy(reg.tipo, tipo);
+      strcpy(reg.valor, valor);
+      reg.longitud = strlen(yytext);
+      reg.posicion = cant_entradas;
+      tabla_simb[cant_entradas++] = reg;
+
+      posicion = cant_entradas-1;
+    }
+
+    return posicion;
 }
 
-int graba_TS()
-{
-     int i;
-     char* TS_file = "ts.txt";
+int graba_TS(){
      
-     if((pf_TS = fopen(TS_file, "w")) == NULL)
-     {
+    char* TS_file = "ts.txt";
+     
+    if((pf_TS = fopen(TS_file, "w")) == NULL) {
                printf("Error al grabar la tabla de simbolos \n");
                exit(1);
-     }
+    }
      
-     fprintf(pf_TS, "POSICION \t\t NOMBRE \t\t TIPO \t\t VALOR \t\t LONGITUD \n");
-     
-      for(i = 0; i < cant_entradas; i++)
-      {
-           fprintf(pf_TS,"%d \t\t\t\t %s \t\t\t", tabla_simb[i].posicion, tabla_simb[i].nombre);
+    fprintf(pf_TS, "POSICION \t\t NOMBRE \t\t TIPO \t\t VALOR \t\t LONGITUD \n");
+      
+    for(int i = 0; i < cant_entradas; i++) {
+
+      fprintf(pf_TS,"%d \t\t\t\t %s \t\t\t", tabla_simb[i].posicion, tabla_simb[i].nombre);
            
-          
-            if(tabla_simb[i].tipo != NULL)
-               fprintf(pf_TS,"%s \t\t\t", tabla_simb[i].tipo);
+      if(tabla_simb[i].tipo != NULL){
+        fprintf(pf_TS,"%s \t\t\t", tabla_simb[i].tipo);
+      }
            
-          
-            if(tabla_simb[i].valor != NULL)
-               fprintf(pf_TS,"%s \t\t\t", tabla_simb[i].valor);
-           
-            fprintf(pf_TS,"%d \n", tabla_simb[i].longitud);
-      }    
-     fclose(pf_TS);
+      if(tabla_simb[i].valor != NULL){
+        fprintf(pf_TS,"%s \t\t\t", tabla_simb[i].valor);
+      }
+       
+      fprintf(pf_TS,"%d \n", tabla_simb[i].longitud);
+    }    
+    
+    fclose(pf_TS);
 }
 /***********************FIN TABLA DE SIMBOLOS************************/

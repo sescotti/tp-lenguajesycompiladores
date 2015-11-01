@@ -1,7 +1,6 @@
 program 
 var
  [real,integer]:[i,b]
- string: n1,n2,n3
 endvar
 -/ alguna especie de comentario /-
 -/ un comentario -/un comentario anidado/- /-
@@ -15,7 +14,7 @@ i:= 400
 i:= 200
 	cadena:="aaa"
   cadena:="aaa"
-	i:=16  
+	i:=16
 else
 	
   while a=<7

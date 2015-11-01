@@ -18,23 +18,21 @@ FILE  *yyin;
  TS_reg tabla_simb[100];
 FILE* pf_intermedio;
 
-char listaDeTipos[][100]={"."};
-char listaDeIDs[][100]={"."};
+char _listaDeTipos[][100]={"."};
+char _listaDeIDs[][100]={"."};
 
-int cantidadTipos=0;              
-int cantidadIDs=0;     
+int _cantidadTipos=0;              
+int _cantidadIDs=0;     
 char* yytext;
 
-
-
-
+int numberLine;
 
 
 int grabar_archivo();
 void agregarTipo(char * );
 void agregarIDs(char * );
-
-
+int busca_en_TS(char*);
+void resolverTipos();
 
 void printfTabla(TS_reg);
 %}
@@ -77,12 +75,7 @@ programa: 				{ printf("Inicio COMPILADOR\n");   grabar_archivo();  }
 						PROGRAM 
 						seccion_declaracion 
 						seccion_sentencias 
-						{ printf("Tipos Encontrados:%s %s %s \n",listaDeTipos[0],listaDeTipos[1],listaDeTipos[2]);}
-							{ printf("Tipos IDS:%s %s %s %s %s %s \n",listaDeIDs[0],listaDeIDs[1],listaDeIDs[2],listaDeIDs[3],listaDeIDs[4],listaDeIDs[5]);}
-						{ printf("Compilacion Exitosa! \n");}
-			
-
-						;
+						{ printf("Compilacion Exitosa! \n");};
 
 
 seccion_declaracion: 	{ printf("Inicio DECLARACIONES\n"); }
@@ -96,17 +89,15 @@ seccion_declaracion: 	{ printf("Inicio DECLARACIONES\n"); }
 declaraciones: 			declaracion | 
 						declaraciones declaracion;
 
-declaracion : 			{ printf("Declaracion simple\n"); }
-						tipo_var DEF_TIPO lista_var |				
-						
-						{ printf("Declaracion listado\n"); }
-						CORCH_A lista_tipos CORCH_C DEF_TIPO CORCH_A lista_var CORCH_C;
-
+declaracion : 			{ printf("Declaracion listado\n"); }
+						CORCH_A lista_tipos CORCH_C DEF_TIPO CORCH_A lista_var CORCH_C
+						{ resolverTipos(); };
+				
 lista_tipos : 			tipo_var | lista_tipos COMA tipo_var;
 
-tipo_var : 				REAL {agregarTipo(yytext);}
-						| INTEGER {agregarTipo(yytext);}
-						| STRING{agregarTipo(yytext);} ;
+tipo_var : 				REAL 	{ agregarTipo(yytext); } | 	
+						INTEGER { agregarTipo(yytext); } | 	
+						STRING 	{ agregarTipo(yytext); } ;
 
 constante: 				CONST_INT | CONST_REAL | final_string;
 
@@ -215,14 +206,12 @@ factor: 				P_A expresion P_C | atributo;
 
 
 %%
-int main(int argc,char *argv[])
-{
-  if ((yyin = fopen(argv[1], "rt")) == NULL)
-  {
+int main(int argc,char *argv[]) {
+  
+  if ((yyin = fopen(argv[1], "rt")) == NULL) {
 	printf("\nNo se puede abrir el archivo: %s\n", argv[1]);
   }
-  else
-  {
+  else {
 	yyparse();
   }
   fclose(yyin);
@@ -231,21 +220,34 @@ int main(int argc,char *argv[])
 
 int yyerror(char const *line)
 {
-	printf("Syntax Error\n");   
+	printf("Syntax Error en linea %d\n", numberLine);   
 	exit (1);
 }
 /**********************TIPO y IDS***************************/
-void agregarTipo(char * tipo)
-{
-	strcpy(listaDeTipos[cantidadTipos],tipo);
-	cantidadTipos++;
+void agregarTipo(char * tipo){
+	strcpy(_listaDeTipos[_cantidadTipos++],tipo);
 }
 
-void agregarIDs(char * id)
-{
-	strcpy(listaDeIDs[cantidadIDs],id);
-	cantidadIDs++;
-	printf("IDDDDDDDDDDDDDDDD %s %d\n",listaDeIDs[cantidadIDs], cantidadIDs);
+void agregarIDs(char * id){
+	strcpy(_listaDeIDs[_cantidadIDs++],id);
+}
+
+void resolverTipos() {
+
+	int max = _cantidadTipos > _cantidadIDs ? _cantidadIDs : _cantidadTipos;
+
+	for (int i=0; i<max; i++){
+
+		char* tipo = _listaDeTipos[i];
+		char* id = _listaDeIDs[i];
+		int posicion = busca_en_TS(id);
+		strcpy(tabla_simb[posicion].tipo, tipo);
+
+		printf("[tipo:%s][id:%s][posicion_en_ts:%d]\n",tipo,id,posicion);
+	}
+
+	_cantidadTipos	=	0;
+	_cantidadIDs 	=	0;
 }
 /******************************************************/
 
