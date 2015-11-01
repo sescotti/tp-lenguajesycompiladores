@@ -181,10 +181,10 @@ funcion_take: 			{ printf("TAKE "); }
 						{ printf("FIN_TAKE\n"); }
 						;						
 
-asignacion: 			ID { IAsignacion =  CrearTerceto(tabla_simb[$1].nombre,0,0); } 
+asignacion: 			atributo { IAsignacion = IAtributo;}
 						OP_AS 
 						expresion 
-						{ IAtributo =  CrearTerceto(":=",IAsignacion, IExpresion); }
+						{ IAsignacion =  CrearTerceto(":=",IAsignacion, IExpresion); }
 						;
 						
 decision:				{ printf("IF: "); }
@@ -212,10 +212,8 @@ ciclo: 					{printf("WHILE "); }
 
 iteracion: 				{printf("FOR:"); }
 						FOR iterador DO 
-						{printf("\n");}
-						sentencias 
+							sentencias 
 						ENDFOR
-						{ printf("\n"); }
 						;
 
 condicion: 				comparacion
@@ -235,10 +233,11 @@ comparacion:  			{ printf(" comparacion " ); }
 comparativo: 			expresion | lista_expresiones;
 
 iterador: 				{ printf(" iterador " ); }
-						atributo {IIterador = IAtributo ; printf ("IN");}
+						atributo {IIterador = IAtributo ;}
 						IN {printf ("IN");}
 						lista_expresiones
-						{ IIterador = CrearTerceto ("IN",IListaExpresiones, IIterador); printf("Iterador: %s", IIterador);};
+						{ IIterador = CrearTerceto ("IN",IListaExpresiones, IIterador);}
+						;
 						
 lista_expresiones: 		CORCH_A 
 						contenido_l_expr 
