@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-#include <String.h>
+#include <string.h>
 #include "y.tab.h"
 
 int yystopparser=0;
@@ -15,9 +15,9 @@ FILE  *yyin;
         int longitud;
         } TS_reg;
 		
- TS_reg tabla_simb[100];
+TS_reg tabla_simb[100];
 FILE* pf_intermedio;
-
+int yylval;
 char _listaDeTipos[][100]={"."};
 char _listaDeIDs[][100]={"."};
 
@@ -34,6 +34,21 @@ void agregarIDs(char * );
 int busca_en_TS(char*);
 void resolverTipos();
 
+int IAtributo;
+int IFactor;
+int ITermino;
+int IExpresion;
+typedef struct{
+        char valor1[100];
+        int valor2;
+        int valor3;
+        } Tipo_Terceto;
+ 
+Tipo_Terceto Tercetos[100];
+int numTerceto=0;
+
+
+ 
 void printfTabla(TS_reg);
 %}
 
@@ -99,14 +114,9 @@ tipo_var : 				REAL 	{ agregarTipo(yytext); } |
 						INTEGER { agregarTipo(yytext); } | 	
 						STRING 	{ agregarTipo(yytext); } ;
 
-constante: 				CONST_INT | CONST_REAL | final_string;
-
-final_string:			CONST_STR | CONST_STR CONCAT_STRING CONST_STR
-
-lista_var : 			ID {agregarIDs(yytext); } { printfTabla(tabla_simb[$1]); printfTabla(tabla_simb[$1]); }| lista_var COMA  ID  {agregarIDs(yytext); } { printf ("SINTACTICO ====>LISTA_VAR:%s %d\n ",tabla_simb[$3].nombre,$3); } ;
-
-operador: 				{ printf("Operador\n"); }
-						OP_SURES | OP_MULTDIV;
+lista_var : 			ID {agregarIDs(yytext); printfTabla(tabla_simb[$1]); }
+						| 
+						lista_var COMA  ID  {agregarIDs(yytext); printfTabla(tabla_simb[$3]); } ;
 
 seccion_sentencias: 	{ printf("Inicio de Sentencias \n"); }
 						
@@ -114,13 +124,9 @@ seccion_sentencias: 	{ printf("Inicio de Sentencias \n"); }
 						sentencias
 						ENDP;
 
-sentencias: 			{ printf ("SENTENCIAS\n"); }
-						sentencia | sentencias sentencia;
+sentencias: 			sentencia | sentencias sentencia;
 
-sentencia : 			{ printf ("SENTENCIA\n"); }
-						asignacion 
-					
-						| decision | ciclo | iteracion | write | read | funcion_take;
+sentencia : 			asignacion | decision | ciclo | iteracion | write | read | funcion_take;
 						
 						
 write: 					{ printf ("WRITE\n");}
@@ -131,79 +137,116 @@ read: 					{ printf ("READ\n");}
 						READ ID
 						{ printf ("FIN_READ\n");}
 
-asignacion: 			{ printf("ASIGNACION\n");   } 
-						ID { printf ("SINTACTICO ====>ASIGNACION:%s $1:%d $$:%d\n ",tabla_simb[$1].nombre,$1,$$); } OP_AS expresion 
-						
-						{ printf("FIN_ASIGNACION\n"); }
+funcion_take: 			{ printf("TAKE "); }
+						TAKE P_A 
+							operador 
+						PUNTO_COMA 
+							CONST_INT
+							{printf("%s",yytext);}
+						PUNTO_COMA 
+							lista_expresiones 
+						P_C
+						{ printf("FIN_TAKE\n"); }
+						;						
 
-decision:				{ printf("IF\n"); }
-						IF condicion THEN 
+asignacion: 			{printf("ASIGNACION: ");} 
+						ID { printf ("%s  ", yytext); } 
+						OP_AS { printf(":=");} 
+						expresion 
+						{ printf("\n"); }
+						;
 						
+decision:				{ printf("IF: "); }
+						IF condicion THEN 
+						{printf("\n");}
 						sentencias
+						{printf("\n");}
 						cuerpo_decision;
 
-cuerpo_decision: 		{ printf("ELSE\n"); }
-						ELSE 
+cuerpo_decision: 		{printf("ELSE \n"); }
+						ELSE  
 						sentencias 
 						ENDIF 
-						{ printf("FIN_DE_IF_CON_ELSE\n"); }
+						{printf("\n"); }
 						|
 						ENDIF
-						{ printf("FIN_DE_IF\n"); }
+						{printf("\n"); }
 
 
-ciclo: 					{ printf("CICLO\n"); }
+ciclo: 					{printf("WHILE "); }
 						WHILE condicion DO 
+						{printf("DO \n");}
 						sentencias
 						ENDWHILE
-						{ printf("FIN_DE_CICLO\n"); }; 
+						{ printf("\n"); }; 
 
-iteracion: 				{ printf("FOR\n"); }
-						FOR iterador 
-						DO 
+iteracion: 				{printf("FOR:"); }
+						FOR iterador DO 
+						{printf("\n");}
 						sentencias 
 						ENDFOR
-						{ printf("FIN_FOR\n"); }
+						{ printf("\n"); }
 						;
 
-condicion: 				{ printf("CONDICION\n"); }
-						comparacion |
-						condicion OP_LOG comparacion | 
-						{ printf("NEGACION COMPARACION\n"); }
+condicion: 				comparacion
+						|
+						condicion 
+						OP_LOG { printf(" %s ",yytext ); }
+						comparacion 						
+						| 
+						{ printf(" NOT "); }
 						OP_NOT comparacion;
 
-comparacion:  			{ printf("COMPARACION\n"); }
-						expresion OP_COMPARACION comparativo;
+comparacion:  			expresion 
+						OP_COMPARACION { printf(" %s ",yytext ); }
+						comparativo;
 
-comparativo: 			{ printf("COMPARATIVO\n"); }
-						expresion | lista_expresiones;
+comparativo: 			expresion | lista_expresiones;
 
-iterador: 				{ printf("ITERADOR\n"); }
-						ID IN lista_expresiones
+iterador: 				ID IN lista_expresiones;
+						
+lista_expresiones: 		CORCH_A {printf("[");}
+						contenido_l_expr ; 
+
+contenido_l_expr: 		CORCH_C {printf("]");}
+						| 
+						expresiones CORCH_C {printf("]");};
+						
+expresiones: 			expresion | expresiones COMA {printf(",");} expresion ;
+
+expresion: 				termino {IExpresion = ITermino;}
+						| 
+						expresion 
+						OP_SURES {printf(" %s ",yytext);} 
+						termino 
+						{IExpresion = CrearTerceto("+", IExpresion,ITermino);}
 						;
-						
 
-lista_expresiones: 		CORCH_A contenido_l_expr ; 
-
-contenido_l_expr: 		CORCH_C | expresiones CORCH_C ;
-						
-expresiones: 			expresion | expresiones COMA expresion;
-
-expresion: 				termino | expresion OP_SURES termino ;
-
-termino: 				factor | termino OP_MULTDIV factor;
-
-funcion_take: 			{ printf("TAKE\n"); }
-						TAKE P_A operador PUNTO_COMA 
-								CONST_INT PUNTO_COMA lista_expresiones P_C
-						{ printf("FIN_TAKE\n"); }
+termino: 				factor {ITermino = IFactor;}
+						| 
+						termino 
+						OP_MULTDIV  {printf(" %s ",yytext);} 
+						factor
+						{ITermino = CrearTerceto("*", ITermino,IFactor);}
 						;
+
+factor: 				P_A {printf("(");} 
+						expresion 
+						P_C {printf(")");} 						
+						| 
+						atributo { IFactor = IAtributo;};
 						
-atributo: 				constante  { printf ("SINTACTICO ====>Constante:%s\n ",tabla_simb[$1].nombre); }
-						| ID 	{ printf ("SINTACTICO ====>ID:%s\n ",tabla_simb[$1].nombre); };
+atributo: 				constante  { printf (" %s ",tabla_simb[$1].nombre); IAtributo =  CrearTerceto(tabla_simb[$1].nombre,0,0); }
+						| 
+						ID 	{ printf (" %s ",tabla_simb[$1].nombre);  IAtributo = CrearTerceto(tabla_simb[$1].nombre,0,0); };
 
-factor: 				P_A expresion P_C | atributo;
+constante: 				CONST_INT | CONST_REAL | final_string;
 
+operador: 				OP_SURES  { printf (" %s ",yytext); }
+						|
+						OP_MULTDIV { printf (" %s ",yytext); };
+
+final_string:			CONST_STR | CONST_STR CONCAT_STRING CONST_STR
 
 %%
 int main(int argc,char *argv[]) {
@@ -235,8 +278,8 @@ void agregarIDs(char * id){
 void resolverTipos() {
 
 	int max = _cantidadTipos > _cantidadIDs ? _cantidadIDs : _cantidadTipos;
-
-	for (int i=0; i<max; i++){
+	int i;
+	for (i=0; i<max; i++){
 
 		char* tipo = _listaDeTipos[i];
 		char* id = _listaDeIDs[i];
@@ -249,6 +292,20 @@ void resolverTipos() {
 	_cantidadTipos	=	0;
 	_cantidadIDs 	=	0;
 }
+
+int CrearTerceto( char * val1, int val2, int val3)
+{
+Tipo_Terceto nuevo;
+strcpy(nuevo.valor1, val1);
+nuevo.valor2 = val2;
+nuevo.valor3 = val3;
+Tercetos[numTerceto] = nuevo;
+
+printf ("Se crea terceto %d con valores: %s %d %d \n", numTerceto, val1, val2, val3);
+numTerceto++;
+return (numTerceto-1);
+}
+
 /******************************************************/
 
 

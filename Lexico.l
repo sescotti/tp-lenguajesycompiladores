@@ -4,7 +4,7 @@
 #include <string.h>
 #include "y.tab.h"
 FILE  *yyin;
-int yylval;
+extern int yylval;
 float yyfval;
 extern int numberLine = 1, numberChar;
  typedef struct{
@@ -77,29 +77,29 @@ MULT_DIV	            ["*"|"/"]
 "not"        	{ return OP_NOT;}
 "write"			  { return WRITE;}
 "read"			  { return READ;}
-{ID}			    { printf("Encontre un ID %s\n", yytext);
-                yylval = inserta_TS("ID","---"); 
-				        printf("ID Tanto:%s yylval:%d \n", yytext, yylval);
+{ID}			{/*printf("LEXICO -> Encontre un ID %s\n", yytext);*/
+                inserta_TS("ID","---"); 
+				/*printf("LEXICO -> ID texto:%s valor:%d \n", yytext,yylval);*/
                 return ID;}
 {CONST_INT}		{ 
                 if(!validar_cota_int()){
                   yyterminate();
                 }
-                yylval = inserta_TS("CONST_INT",yytext); 
+                inserta_TS("CONST_INT",yytext); 
                 return CONST_INT;
               }
 {CONST_STR}		{ 
                 if(!validar_longitud_string(yytext)) { 
                   yyterminate(); 
                 }
-                yylval = inserta_TS("CONST_STR",yytext); 
+                inserta_TS("CONST_STR",yytext); 
                 return CONST_STR;
               }
 {CONST_REAL}	{ 
                 if(!validar_cota_real()){
                   yyterminate(); 
                 }
-                yylval = inserta_TS("CONST_REAL",yytext); 
+                inserta_TS("CONST_REAL",yytext); 
                 return CONST_REAL;
               }
 
@@ -169,8 +169,8 @@ int validar_cota_real()
 /***********************INICIO TABLA DE SIMBOLOS************************/
 //Buscamos que no la hayamos guardado
 int busca_en_TS(char* nombre) {
-
-    for(int i = 0; i<cant_entradas; i++) {
+	int i;
+    for(i = 0; i<cant_entradas; i++) {
         if(!strcmp(tabla_simb[i].nombre, nombre)){
                return i;
         }
@@ -210,8 +210,8 @@ int graba_TS(){
     }
      
     fprintf(pf_TS, "POSICION \t\t NOMBRE \t\t TIPO \t\t VALOR \t\t LONGITUD \n");
-      
-    for(int i = 0; i < cant_entradas; i++) {
+    int i;  
+    for(i = 0; i < cant_entradas; i++) {
 
       fprintf(pf_TS,"%d \t\t\t\t %s \t\t\t", tabla_simb[i].posicion, tabla_simb[i].nombre);
            
