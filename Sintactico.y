@@ -53,6 +53,7 @@ int IAtributo;
 int IFactor;
 int ITermino;
 int IExpresion;
+int IId;
 
 typedef struct{
         char valor1[100];
@@ -175,11 +176,10 @@ funcion_take: 			{ printf("TAKE "); }
 						{ printf("FIN_TAKE\n"); }
 						;						
 
-asignacion: 			{printf("ASIGNACION: ");} 
-						ID { printf ("%s  ", yytext); } 
-						OP_AS { printf(":=");} 
+asignacion: 			ID { IId =  CrearTerceto(tabla_simb[$1].nombre,0,0); } 
+						OP_AS 
 						expresion 
-						{ printf("\n"); }
+						{ IAtributo =  CrearTerceto(":=",IId, IExpresion); }
 						;
 						
 decision:				{ printf("IF: "); }
@@ -270,9 +270,9 @@ factor: 				P_A { insertar_pila(&stack, ITermino); insertar_pila(&stack, IExpres
 						| 
 						atributo { IFactor = IAtributo;};
 						
-atributo: 				constante  { printf (" %s ",tabla_simb[$1].nombre); IAtributo =  CrearTerceto(tabla_simb[$1].nombre,0,0); }
+atributo: 				constante  { IAtributo =  CrearTerceto(tabla_simb[$1].nombre,0,0); }
 						| 
-						ID 	{ printf (" %s ",tabla_simb[$1].nombre);  IAtributo = CrearTerceto(tabla_simb[$1].nombre,0,0); };
+						ID 	{ IAtributo = CrearTerceto(tabla_simb[$1].nombre,0,0); };
 
 constante: 				CONST_INT | CONST_REAL | final_string;
 

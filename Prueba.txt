@@ -11,6 +11,4 @@ i:= 500
 id:=id1+cte1*cte2/cte4+cte5
 id:=id90-id100
 
-
-
 endp

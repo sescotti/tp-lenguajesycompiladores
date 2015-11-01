@@ -21,15 +21,15 @@ extern int numberLine = 1, numberChar;
 %option noyywrap  
 %option yylineno 
 
-DIGITO					[0-9]
-LETRA					[a-zA-Z]
+DIGITO					        [0-9]
+LETRA					          [a-zA-Z]
 CONST_STR               \".*\"
 COMENTARIOS             \-\/({LETRA}|{DIGITO}|.)+\/\-
 CONST_REAL              {DIGITO}*"."{DIGITO}+|{DIGITO}+"."{DIGITO}* 
 CONST_INT               {DIGITO}+
-ID						{LETRA}({LETRA}|{DIGITO}|_)*	
-SUM_RES	                ["+"|"-"]
-MULT_DIV	            ["*"|"/"]
+ID						          {LETRA}({LETRA}|{DIGITO}|_)*	
+SUM_RES	                "+"|"-"
+MULT_DIV	              "*"|"/"
 
 
 %%
