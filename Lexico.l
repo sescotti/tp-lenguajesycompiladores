@@ -7,6 +7,16 @@ FILE  *yyin;
 int yylval;
 float yyfval;
 int numberLine, numberChar;
+ typedef struct{
+        int posicion;
+        char nombre[30];
+        char tipo[20];
+        char valor[100];
+        int longitud;
+        } TS_reg;
+		
+ extern TS_reg tabla_simb[100];
+
 %}
 %option noyywrap  
 %option yylineno 
@@ -69,6 +79,7 @@ MULT_DIV	            ["*"|"/"]
 "read"			  { return READ;}
 {ID}			    { printf("Encontre un ID %s\n", yytext);
                 inserta_TS("ID","---"); 
+				      printf("ID Tanto:%s yylval:%d \n", yytext,yylval);
                 return ID;}
 {CONST_INT}		{ 
                 if(!validar_cota_int()){
@@ -101,15 +112,9 @@ MULT_DIV	            ["*"|"/"]
 
 /*CODIGO EN C*/
 /***********************INICIO DECLARACIONES*****************************/
-typedef struct{
-        int posicion;
-        char nombre[30];
-        char tipo[20];
-        char valor[100];
-        int longitud;
-        } TS_reg;
-		
-TS_reg tabla_simb[100];
+
+
+
 int cant_entradas = 0;
 FILE* pf_TS;
 
@@ -178,6 +183,7 @@ int busca_en_TS(char* nombre)
     return -1;
 }
 
+
 int inserta_TS(char* tipo,char* valor)
 {
 	 if((yylval = busca_en_TS(yytext)) == -1)
@@ -192,7 +198,7 @@ int inserta_TS(char* tipo,char* valor)
 		
 		return yylval = cant_entradas-1;
 	 }
-	 return 0;
+	 return yylval;
 }
 
 int graba_TS()

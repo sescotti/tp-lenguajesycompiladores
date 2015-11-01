@@ -1,10 +1,42 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <String.h>
 #include "y.tab.h"
+
 int yystopparser=0;
 FILE  *yyin;
 
+ typedef struct{
+        int posicion;
+        char nombre[30];
+        char tipo[20];
+        char valor[100];
+        int longitud;
+        } TS_reg;
+		
+ TS_reg tabla_simb[100];
+FILE* pf_intermedio;
+
+char listaDeTipos[][100]={"."};
+char listaDeIDs[][100]={"."};
+
+int cantidadTipos=0;              
+int cantidadIDs=0;     
+char* yytext;
+
+
+
+
+
+
+int grabar_archivo();
+void agregarTipo(char * );
+void agregarIDs(char * );
+
+
+
+void printfTabla(TS_reg);
 %}
 
 %token PROGRAM
@@ -40,12 +72,18 @@ FILE  *yyin;
 %token TAKE
 
 %%
-programa: 				{ printf("Inicio COMPILADOR\n"); } 
+
+programa: 				{ printf("Inicio COMPILADOR\n");   grabar_archivo();  } 
 						PROGRAM 
 						seccion_declaracion 
 						seccion_sentencias 
-						
-						{ printf("Compilacion Exitosa! \n");};
+						{ printf("Tipos Encontrados:%s %s %s \n",listaDeTipos[0],listaDeTipos[1],listaDeTipos[2]);}
+							{ printf("Tipos IDS:%s %s %s %s %s %s \n",listaDeIDs[0],listaDeIDs[1],listaDeIDs[2],listaDeIDs[3],listaDeIDs[4],listaDeIDs[5]);}
+						{ printf("Compilacion Exitosa! \n");}
+			
+
+						;
+
 
 seccion_declaracion: 	{ printf("Inicio DECLARACIONES\n"); }
 
@@ -66,18 +104,20 @@ declaracion : 			{ printf("Declaracion simple\n"); }
 
 lista_tipos : 			tipo_var | lista_tipos COMA tipo_var;
 
-tipo_var : 				REAL | INTEGER | STRING;
+tipo_var : 				REAL {agregarTipo(yytext);}
+						| INTEGER {agregarTipo(yytext);}
+						| STRING{agregarTipo(yytext);} ;
 
 constante: 				CONST_INT | CONST_REAL | final_string;
 
 final_string:			CONST_STR | CONST_STR CONCAT_STRING CONST_STR
 
-lista_var : 			ID | lista_var COMA ID;
+lista_var : 			ID {agregarIDs(yytext); } { printfTabla(tabla_simb[$1]); printfTabla(tabla_simb[$1]); }| lista_var COMA  ID  {agregarIDs(yytext); } { printf ("SINTACTICO ====>LISTA_VAR:%s %d\n ",tabla_simb[$3].nombre,$3); } ;
 
 operador: 				{ printf("Operador\n"); }
 						OP_SURES | OP_MULTDIV;
 
-seccion_sentencias: 	{ printf("Inicio de Sentencias\n"); }
+seccion_sentencias: 	{ printf("Inicio de Sentencias \n"); }
 						
 						BEGINP 
 						sentencias
@@ -87,8 +127,11 @@ sentencias: 			{ printf ("SENTENCIAS\n"); }
 						sentencia | sentencias sentencia;
 
 sentencia : 			{ printf ("SENTENCIA\n"); }
-						asignacion | decision | ciclo | iteracion | write | read | funcion_take;
-
+						asignacion 
+					
+						| decision | ciclo | iteracion | write | read | funcion_take;
+						
+						
 write: 					{ printf ("WRITE\n");}
 						WRITE atributo
 						{ printf ("FIN_WRITE\n");};
@@ -97,12 +140,14 @@ read: 					{ printf ("READ\n");}
 						READ ID
 						{ printf ("FIN_READ\n");}
 
-asignacion: 			{ printf("ASIGNACION\n"); }
-						ID OP_AS expresion 
+asignacion: 			{ printf("ASIGNACION\n");   } 
+						ID { printf ("SINTACTICO ====>ASIGNACION:%s $1:%d $$:%d\n ",tabla_simb[$1].nombre,$1,$$); } OP_AS expresion 
+						
 						{ printf("FIN_ASIGNACION\n"); }
 
 decision:				{ printf("IF\n"); }
 						IF condicion THEN 
+						
 						sentencias
 						cuerpo_decision;
 
@@ -143,9 +188,11 @@ comparativo: 			{ printf("COMPARATIVO\n"); }
 						expresion | lista_expresiones;
 
 iterador: 				{ printf("ITERADOR\n"); }
-						ID IN lista_expresiones;
+						ID IN lista_expresiones
+						;
+						
 
-lista_expresiones: 		CORCH_A contenido_l_expr; 
+lista_expresiones: 		CORCH_A contenido_l_expr ; 
 
 contenido_l_expr: 		CORCH_C | expresiones CORCH_C ;
 						
@@ -161,7 +208,8 @@ funcion_take: 			{ printf("TAKE\n"); }
 						{ printf("FIN_TAKE\n"); }
 						;
 						
-atributo: 				constante | ID
+atributo: 				constante  { printf ("SINTACTICO ====>Constante:%s\n ",tabla_simb[$1].nombre); }
+						| ID 	{ printf ("SINTACTICO ====>ID:%s\n ",tabla_simb[$1].nombre); };
 
 factor: 				P_A expresion P_C | atributo;
 
@@ -185,4 +233,60 @@ int yyerror(char const *line)
 {
 	printf("Syntax Error\n");   
 	exit (1);
+}
+/**********************TIPO y IDS***************************/
+void agregarTipo(char * tipo)
+{
+	strcpy(listaDeTipos[cantidadTipos],tipo);
+	cantidadTipos++;
+}
+
+void agregarIDs(char * id)
+{
+	strcpy(listaDeIDs[cantidadIDs],id);
+	cantidadIDs++;
+	printf("IDDDDDDDDDDDDDDDD %s %d\n",listaDeIDs[cantidadIDs], cantidadIDs);
+}
+/******************************************************/
+
+
+/*******************Escribir arhivo**********************/
+
+
+
+
+
+void printfTabla(TS_reg linea_tabla)
+{
+	printf("pos:%d nom:%s tipo:%s val:%s long:%d \n",linea_tabla.posicion,linea_tabla.nombre,linea_tabla.tipo,linea_tabla.valor,linea_tabla.longitud);
+}
+
+int grabar_archivo()
+{
+     int i;
+     char* TS_file = "intermedia.txt";
+     
+     if((pf_intermedio = fopen(TS_file, "w")) == NULL)
+     {
+               printf("Error al grabar el archivo de intermedio \n");
+               exit(1);
+     }
+     
+     fprintf(pf_intermedio, "Codigo Intermedio \n");
+     
+    /*  for(i = 0; i < cant_entradas; i++)
+      {
+           fprintf(pf_TS,"%d \t\t\t\t %s \t\t\t", tabla_simb[i].posicion, tabla_simb[i].nombre);
+           
+          
+            if(tabla_simb[i].tipo != NULL)
+               fprintf(pf_TS,"%s \t\t\t", tabla_simb[i].tipo);
+           
+          
+            if(tabla_simb[i].valor != NULL)
+               fprintf(pf_TS,"%s \t\t\t", tabla_simb[i].valor);
+           
+            fprintf(pf_TS,"%d \n", tabla_simb[i].longitud);
+      }*/    
+     fclose(pf_intermedio);
 }

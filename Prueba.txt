@@ -6,19 +6,24 @@ endvar
 -/ alguna especie de comentario /-
 -/ un comentario -/un comentario anidado/- /-
 beginp 
-i:=1	
+
+i:= 500
+
+
 if i>=15 and i=<10 then
-	cadena:="ailinmerloailinmerloailin"
-  cadena:="ailinmerloailinmerloail"
+i:= 400
+i:= 200
+	cadena:="aaa"
+  cadena:="aaa"
 	i:=16  
 else
 	
   while a=<7
         do
         if i>=15 and i=<3 or i=<a then
-       	  cadena:="dentro del if"++"otro texto"
+       	  cadena:="dentro "++"otro"
        	else
-       		cadena:="dentro del else"
+       		cadena:="dentro del"
        	endif
 		i:=5 + b
 	endwhile
@@ -32,6 +37,8 @@ else
   take(*;3;[2+x,35*y,(2+x)*5,1,a,1])
 
 endif
+
+	
 
 if cacona==2 then
     w:=2
