@@ -54,7 +54,11 @@ int IAtributo;
 int IFactor;
 int ITermino;
 int IExpresion;
-int IId;
+int IAsignacion;
+int IExpresiones;
+int IIterador;
+int IContenidoExp;
+int IListaExpresiones;
 
 typedef struct{
         char valor1[100];
@@ -177,10 +181,10 @@ funcion_take: 			{ printf("TAKE "); }
 						{ printf("FIN_TAKE\n"); }
 						;						
 
-asignacion: 			ID { IId =  CrearTerceto(tabla_simb[$1].nombre,0,0); } 
+asignacion: 			ID { IAsignacion =  CrearTerceto(tabla_simb[$1].nombre,0,0); } 
 						OP_AS 
 						expresion 
-						{ IAtributo =  CrearTerceto(":=",IId, IExpresion); }
+						{ IAtributo =  CrearTerceto(":=",IAsignacion, IExpresion); }
 						;
 						
 decision:				{ printf("IF: "); }
@@ -202,8 +206,7 @@ cuerpo_decision: 		{printf("ELSE \n"); }
 
 ciclo: 					{printf("WHILE "); }
 						WHILE condicion DO 
-						{printf("DO \n");}
-						sentencias
+							sentencias
 						ENDWHILE
 						{ printf("\n"); }; 
 
@@ -224,22 +227,34 @@ condicion: 				comparacion
 						{ printf(" NOT "); }
 						OP_NOT comparacion;
 
-comparacion:  			expresion 
-						OP_COMPARACION { printf(" %s ",yytext ); }
+comparacion:  			{ printf(" comparacion " ); }
+						expresion 
+						OP_COMPARACION 
 						comparativo;
 
 comparativo: 			expresion | lista_expresiones;
 
-iterador: 				ID IN lista_expresiones;
+iterador: 				{ printf(" iterador " ); }
+						atributo {IIterador = IAtributo ; printf ("IN");}
+						IN {printf ("IN");}
+						lista_expresiones
+						{ IIterador = CrearTerceto ("IN",IListaExpresiones, IIterador); printf("Iterador: %s", IIterador);};
 						
-lista_expresiones: 		CORCH_A {printf("[");}
-						contenido_l_expr ; 
+lista_expresiones: 		CORCH_A 
+						contenido_l_expr 
+						{ IListaExpresiones = IContenidoExp ;}; 
 
-contenido_l_expr: 		CORCH_C {printf("]");}
+contenido_l_expr: 		CORCH_C { IContenidoExp = 0; }
 						| 
-						expresiones CORCH_C {printf("]");};
+						expresiones CORCH_C { IContenidoExp = IExpresiones;};
 						
-expresiones: 			expresion | expresiones COMA {printf(",");} expresion ;
+expresiones: 			expresion {IExpresiones = IExpresion ; }
+						| 
+						expresiones 
+						COMA 
+						expresion 
+						{IExpresiones = CrearTerceto (",", IExpresiones,IExpresion);}
+						;
 
 expresion: 				termino {IExpresion = ITermino;}
 						| 
