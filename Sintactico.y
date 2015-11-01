@@ -7,6 +7,7 @@
 #define ERROR -1
 int yystopparser=0;
 FILE  *yyin;
+FILE* pf_asm;
 
 typedef struct s_nodo {
     int valor;
@@ -113,7 +114,7 @@ void printfTabla(TS_reg);
 
 %%
 
-programa: 				{ printf("Inicio COMPILADOR\n");   grabar_archivo();  } 
+programa: 				{ printf("Inicio COMPILADOR\n"); } 
 						PROGRAM 
 						seccion_declaracion 
 						seccion_sentencias 
@@ -292,6 +293,9 @@ int main(int argc,char *argv[]) {
   else {
 	yyparse();
   }
+
+  grabar_archivo(); 
+
   fclose(yyin);
   return 0;
 }
@@ -357,33 +361,22 @@ void printfTabla(TS_reg linea_tabla)
 
 int grabar_archivo()
 {
-     int i;
-     char* TS_file = "intermedia.txt";
-     
-     if((pf_intermedio = fopen(TS_file, "w")) == NULL)
-     {
-               printf("Error al grabar el archivo de intermedio \n");
-               exit(1);
-     }
-     
-     fprintf(pf_intermedio, "Codigo Intermedio \n");
-     
-    /*  for(i = 0; i < cant_entradas; i++)
-      {
-           fprintf(pf_TS,"%d \t\t\t\t %s \t\t\t", tabla_simb[i].posicion, tabla_simb[i].nombre);
-           
-          
-            if(tabla_simb[i].tipo != NULL)
-               fprintf(pf_TS,"%s \t\t\t", tabla_simb[i].tipo);
-           
-          
-            if(tabla_simb[i].valor != NULL)
-               fprintf(pf_TS,"%s \t\t\t", tabla_simb[i].valor);
-           
-            fprintf(pf_TS,"%d \n", tabla_simb[i].longitud);
-      }*/    
-     fclose(pf_intermedio);
+    int i;
+    char* TS_file = "intermedia.txt";
+    
+    if((pf_intermedio = fopen(TS_file, "w")) == NULL)
+    {
+              printf("Error al grabar el archivo de intermedio \n");
+              exit(1);
+    }
+    
+    for(i = 0; i < numTerceto; i++)
+    {
+          fprintf(pf_intermedio,"(%s,%d,%d)\n", Tercetos[i].valor1, Tercetos[i].valor2,Tercetos[i].valor3);
+    }    
+    fclose(pf_intermedio);
 }
+
 ///////////////////////////////// PILA OPERADOR ///////////////////////////////////////////////
 
 /** inserta un entero en la pila */
