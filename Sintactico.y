@@ -59,6 +59,8 @@ int IExpresiones;
 int IIterador;
 int IContenidoExp;
 int IListaExpresiones;
+int IComparacion;
+int IComparativo;
 
 typedef struct{
         char valor1[100];
@@ -225,18 +227,24 @@ condicion: 				comparacion
 						{ printf(" NOT "); }
 						OP_NOT comparacion;
 
-comparacion:  			{ printf(" comparacion " ); }
-						expresion 
-						OP_COMPARACION 
-						comparativo;
+comparacion:  			{ printf(" ENTRO A comparacion " ); }
+						expresion  {IComparacion = IExpresion;}
+						OP_COMPARACION {insertar_pila(&stack, getCodigo(yytext)); printf("Operdaor %s", yytext);}
+						comparativo 
+						{getOperador(sacar_pila(&stack), operador); 
+						IComparacion = CrearTerceto(operador,IComparacion,IComparativo );}
+						;
 
-comparativo: 			expresion | lista_expresiones;
+comparativo: 			expresion {IComparativo = IExpresion;}
+						| 
+						lista_expresiones { IComparativo = IListaExpresiones;}
+						;
 
 iterador: 				{ printf(" iterador " ); }
 						atributo {IIterador = IAtributo ;}
 						IN {printf ("IN");}
 						lista_expresiones
-						{ IIterador = CrearTerceto ("IN",IListaExpresiones, IIterador);}
+						{ IIterador = CrearTerceto ("IN",IIterador,IListaExpresiones);}
 						;
 						
 lista_expresiones: 		CORCH_A 
@@ -258,14 +266,9 @@ expresiones: 			expresion {IExpresiones = IExpresion ; }
 expresion: 				termino {IExpresion = ITermino;}
 						| 
 						expresion 
-						OP_SURES {
-							insertar_pila(&stack, getCodigo(yytext));
-						} 
+						OP_SURES {	insertar_pila(&stack, getCodigo(yytext));} 
 						termino 
-						{					
-							getOperador(sacar_pila(&stack), operador);
-							IExpresion = CrearTerceto(operador, IExpresion,ITermino);
-						}
+						{getOperador(sacar_pila(&stack), operador);IExpresion = CrearTerceto(operador, IExpresion,ITermino);}
 						;
 
 termino: 				factor {ITermino = IFactor;}
@@ -273,10 +276,7 @@ termino: 				factor {ITermino = IFactor;}
 						termino 
 						OP_MULTDIV  { insertar_pila(&stack, getCodigo(yytext));	} 
 						factor
-						{
-							getOperador(sacar_pila(&stack), operador);
-							ITermino = CrearTerceto(operador, ITermino,IFactor);
-						}
+						{getOperador(sacar_pila(&stack), operador);ITermino = CrearTerceto(operador, ITermino,IFactor);}
 						;
 
 factor: 				P_A { insertar_pila(&stack, ITermino); insertar_pila(&stack, IExpresion);} 
@@ -438,6 +438,8 @@ int getCodigo(char* operador){
 		return 3;
 	} else if(operador[0] == '-'){
 		return 4;
+	} else if (strcmp(operador,"in") == 0) {
+		return 5;
 	} else {
 		return 0;
 	}
@@ -453,5 +455,7 @@ void getOperador(int codigo, char* operador){
 		strcpy(operador,"+");
 	} else if(codigo == 4){
 		strcpy(operador,"-");
+	} else if (codigo == 5) {
+		strcpy(operador, "in");
 	}
 }
