@@ -27,6 +27,9 @@ typedef struct{
  TS_reg tabla_simb[100];
 FILE* pf_intermedio;
 int yylval;
+
+char* operador;
+
 char listaDeTipos[][100]={"."};
 char listaDeIDs[][100]={"."};
 
@@ -109,11 +112,10 @@ void printfTabla(TS_reg);
 
 %%
 
-programa: 				{ printf("Inicio COMPILADOR\n"); } 
+programa: 				{ printf("Inicio COMPILADOR\n");   grabar_archivo();  } 
 						PROGRAM 
 						seccion_declaracion 
 						seccion_sentencias 
-						{ grabar_archivo(); }
 						{ printf("Compilacion Exitosa! \n");};
 
 
@@ -242,15 +244,11 @@ expresion: 				termino {IExpresion = ITermino;}
 						| 
 						expresion 
 						OP_SURES {
-							int codigo = getCodigo(yytext);
-							insertar_pila(&stack, codigo);
+							insertar_pila(&stack, getCodigo(yytext));
 						} 
 						termino 
-						{
-							char* operador = (char*)malloc(sizeof(char));
-							int codigo = sacar_pila(&stack);
-							getOperador(codigo, operador);
-
+						{					
+							getOperador(sacar_pila(&stack), operador);
 							IExpresion = CrearTerceto(operador, IExpresion,ITermino);
 						}
 						;
@@ -258,23 +256,17 @@ expresion: 				termino {IExpresion = ITermino;}
 termino: 				factor {ITermino = IFactor;}
 						| 
 						termino 
-						OP_MULTDIV  { 
-							int codigo = getCodigo(yytext);
-							insertar_pila(&stack, codigo);
-						} 
+						OP_MULTDIV  { insertar_pila(&stack, getCodigo(yytext));	} 
 						factor
 						{
-							char* operador = (char*)malloc(sizeof(char));
-							int codigo = sacar_pila(&stack);
-							getOperador(codigo, operador);
-
+							getOperador(sacar_pila(&stack), operador);
 							ITermino = CrearTerceto(operador, ITermino,IFactor);
 						}
 						;
 
-factor: 				P_A {printf("(");} 
-						expresion 
-						P_C {printf(")");} 						
+factor: 				P_A { insertar_pila(&stack, ITermino);} 
+						expresion  { IFactor = IExpresion;}
+						P_C { ITermino =sacar_pila(&stack) ;} 						
 						| 
 						atributo { IFactor = IAtributo;};
 						
@@ -284,15 +276,16 @@ atributo: 				constante  { printf (" %s ",tabla_simb[$1].nombre); IAtributo =  C
 
 constante: 				CONST_INT | CONST_REAL | final_string;
 
-operador: 				OP_SURES  { printf (" %s ",yytext); }
-						|
-						OP_MULTDIV { printf (" %s ",yytext); };
+final_string:			CONST_STR | CONST_STR CONCAT_STRING CONST_STR ;
 
-final_string:			CONST_STR | CONST_STR CONCAT_STRING CONST_STR
+operador: 				OP_SURES 
+						|
+						OP_MULTDIV 
+						;
 
 %%
 int main(int argc,char *argv[]) {
-  
+  operador = (char*)malloc(sizeof(char));
   if ((yyin = fopen(argv[1], "rt")) == NULL) {
 	printf("\nNo se puede abrir el archivo: %s\n", argv[1]);
   }
@@ -373,20 +366,24 @@ int grabar_archivo()
                exit(1);
      }
      
-    // fprintf(pf_intermedio, "Codigo Intermedio \n");
+     fprintf(pf_intermedio, "Codigo Intermedio \n");
      
-      for(i = 0; i < numTerceto; i++)
+    /*  for(i = 0; i < cant_entradas; i++)
       {
-           fprintf(pf_intermedio,"(%s,%d,%d)\n", Tercetos[i].valor1, Tercetos[i].valor2,Tercetos[i].valor3);
-     
-        
-      }    
+           fprintf(pf_TS,"%d \t\t\t\t %s \t\t\t", tabla_simb[i].posicion, tabla_simb[i].nombre);
+           
+          
+            if(tabla_simb[i].tipo != NULL)
+               fprintf(pf_TS,"%s \t\t\t", tabla_simb[i].tipo);
+           
+          
+            if(tabla_simb[i].valor != NULL)
+               fprintf(pf_TS,"%s \t\t\t", tabla_simb[i].valor);
+           
+            fprintf(pf_TS,"%d \n", tabla_simb[i].longitud);
+      }*/    
      fclose(pf_intermedio);
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> 4efebff3aa672eb4fd2961b84c3fed6736af5b2d
 ///////////////////////////////// PILA OPERADOR ///////////////////////////////////////////////
 
 /** inserta un entero en la pila */
