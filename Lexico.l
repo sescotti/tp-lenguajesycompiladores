@@ -78,28 +78,28 @@ MULT_DIV	            ["*"|"/"]
 "write"			  { return WRITE;}
 "read"			  { return READ;}
 {ID}			{/*printf("LEXICO -> Encontre un ID %s\n", yytext);*/
-                inserta_TS("ID","---"); 
+                yylval = inserta_TS("ID","---"); 
 				/*printf("LEXICO -> ID texto:%s valor:%d \n", yytext,yylval);*/
                 return ID;}
 {CONST_INT}		{ 
                 if(!validar_cota_int()){
                   yyterminate();
                 }
-                inserta_TS("CONST_INT",yytext); 
+                yylval = inserta_TS("CONST_INT",yytext); 
                 return CONST_INT;
               }
 {CONST_STR}		{ 
                 if(!validar_longitud_string(yytext)) { 
                   yyterminate(); 
                 }
-                inserta_TS("CONST_STR",yytext); 
+                yylval = inserta_TS("CONST_STR",yytext); 
                 return CONST_STR;
               }
 {CONST_REAL}	{ 
                 if(!validar_cota_real()){
                   yyterminate(); 
                 }
-                inserta_TS("CONST_REAL",yytext); 
+                yylval = inserta_TS("CONST_REAL",yytext); 
                 return CONST_REAL;
               }
 

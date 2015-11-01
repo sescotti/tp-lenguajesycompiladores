@@ -8,44 +8,9 @@ beginp
 
 i:= 500
 
-
-if i>=15 and i=<10 then
-i:= 400
-i:= 200
-	cadena:="aaa"
-  cadena:="aaa"
-	i:=16
-else
-	
-  while a=<7
-        do
-        if i>=15 and i=<3 or i=<a then
-       	  cadena:="dentro "++"otro"
-       	else
-       		cadena:="dentro del"
-       	endif
-		i:=5 + b
-	endwhile
-
-  write "algo"
-  read lo_que_de
-
-  take(+;3;[])
-  take(+;3;[2,35,2,1,32])  
-  take(*;3;[2+x,35*y,(2+x)*5,1,a])
-  take(*;3;[2+x,35*y,(2+x)*5,1,a,1])
-
-endif
-
-	
-
-if cacona==2 then
-    w:=2
-endif
+id:=id1+cte1*cte2/cte4+cte5
+id:=id90-id100
 
 
-while a in [ 2, x, 1, a, 2 ]
-do
-  take(+;3;[2,35,2,1,32])
-endwhile
+
 endp

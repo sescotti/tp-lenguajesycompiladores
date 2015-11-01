@@ -383,7 +383,10 @@ int grabar_archivo()
       }    
      fclose(pf_intermedio);
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4efebff3aa672eb4fd2961b84c3fed6736af5b2d
 ///////////////////////////////// PILA OPERADOR ///////////////////////////////////////////////
 
 /** inserta un entero en la pila */
