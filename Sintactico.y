@@ -1,13 +1,22 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <String.h>
 #include "y.tab.h"
-
+#define STACK_MAX 100
+#define ERROR -1
 int yystopparser=0;
 FILE  *yyin;
 
- typedef struct{
+typedef struct s_nodo {
+    int valor;
+    struct s_nodo *sig;
+} t_nodo;
+
+typedef t_nodo* t_pila;
+t_pila stack;
+
+typedef struct{
         int posicion;
         char nombre[30];
         char tipo[20];
@@ -15,9 +24,12 @@ FILE  *yyin;
         int longitud;
         } TS_reg;
 		
-TS_reg tabla_simb[100];
+ TS_reg tabla_simb[100];
 FILE* pf_intermedio;
 int yylval;
+char listaDeTipos[][100]={"."};
+char listaDeIDs[][100]={"."};
+
 char _listaDeTipos[][100]={"."};
 char _listaDeIDs[][100]={"."};
 
@@ -38,17 +50,28 @@ int IAtributo;
 int IFactor;
 int ITermino;
 int IExpresion;
+
 typedef struct{
         char valor1[100];
         int valor2;
         int valor3;
-        } Tipo_Terceto;
+} Tipo_Terceto;
  
 Tipo_Terceto Tercetos[100];
 int numTerceto=0;
 
+/** inserta un entero en la pila */
+void insertar_pila (t_pila*, int);
+/** obtiene un entero de la pila */
+int sacar_pila(t_pila*);
+/** crea una estructura de pila */
+void crear_pila(t_pila*);
+/** destruye pila */
+void destruir_pila(t_pila*);
 
- 
+int getCodigo(char* operador);
+void getOperador(int codigo, char* operador);
+
 void printfTabla(TS_reg);
 %}
 
@@ -71,9 +94,9 @@ void printfTabla(TS_reg);
 %token OP_LOG
 %token OP_NOT
 %token OP_COMPARACION
-%token OP_AS
-%token OP_SURES
-%token OP_MULTDIV
+%right OP_AS
+%left OP_SURES
+%left OP_MULTDIV
 %token P_A P_C
 %token C_A C_C
 %token LONG
@@ -217,17 +240,35 @@ expresiones: 			expresion | expresiones COMA {printf(",");} expresion ;
 expresion: 				termino {IExpresion = ITermino;}
 						| 
 						expresion 
-						OP_SURES {printf(" %s ",yytext);} 
+						OP_SURES {
+							int codigo = getCodigo(yytext);
+							insertar_pila(&stack, codigo);
+						} 
 						termino 
-						{IExpresion = CrearTerceto("+", IExpresion,ITermino);}
+						{
+							char* operador = (char*)malloc(sizeof(char));
+							int codigo = sacar_pila(&stack);
+							getOperador(codigo, operador);
+
+							IExpresion = CrearTerceto(operador, IExpresion,ITermino);
+						}
 						;
 
 termino: 				factor {ITermino = IFactor;}
 						| 
 						termino 
-						OP_MULTDIV  {printf(" %s ",yytext);} 
+						OP_MULTDIV  { 
+							int codigo = getCodigo(yytext);
+							insertar_pila(&stack, codigo);
+						} 
 						factor
-						{ITermino = CrearTerceto("*", ITermino,IFactor);}
+						{
+							char* operador = (char*)malloc(sizeof(char));
+							int codigo = sacar_pila(&stack);
+							getOperador(codigo, operador);
+
+							ITermino = CrearTerceto(operador, ITermino,IFactor);
+						}
 						;
 
 factor: 				P_A {printf("(");} 
@@ -348,4 +389,68 @@ int grabar_archivo()
             fprintf(pf_TS,"%d \n", tabla_simb[i].longitud);
       }*/    
      fclose(pf_intermedio);
+}
+///////////////////////////////// PILA OPERADOR ///////////////////////////////////////////////
+
+/** inserta un entero en la pila */
+void insertar_pila (t_pila *p, int valor) {
+    // creo nodo
+    t_nodo *nodo = (t_nodo*) malloc (sizeof(t_nodo));
+    // asigno valor
+    nodo->valor = valor;
+    // apunto al elemento siguiente
+    nodo->sig = *p;
+    // apunto al tope de la pila
+    *p = nodo;
+}
+
+/** obtiene un entero de la pila */
+int sacar_pila(t_pila *p) {
+    int valor = ERROR;
+    t_nodo *aux;
+    if (*p != NULL) {
+       aux = *p;
+       valor = aux->valor;
+       *p = aux->sig;
+       free(aux);
+    }
+    return valor;
+}
+
+/** crea una estructura de pila */
+void crear_pila(t_pila *p) {
+    *p = NULL;
+}
+
+/** destruye pila */
+void destruir_pila(t_pila *p) {
+    while ( ERROR != sacar_pila(p));
+}
+
+int getCodigo(char* operador){
+
+	if(operador[0] == '*'){
+		return 1;
+	} else if (operador[0] == '/'){
+		return 2;
+	} else if(operador[0] == '+'){
+		return 3;
+	} else if(operador[0] == '-'){
+		return 4;
+	} else {
+		return 0;
+	}
+
+}
+
+void getOperador(int codigo, char* operador){
+	if(codigo == 1){
+		strcpy(operador,"*");
+	} else if(codigo == 2){
+		strcpy(operador,"/");
+	} else if(codigo == 3){
+		strcpy(operador,"+");
+	} else if(codigo == 4){
+		strcpy(operador,"-");
+	}
 }
