@@ -264,9 +264,9 @@ termino: 				factor {ITermino = IFactor;}
 						}
 						;
 
-factor: 				P_A { insertar_pila(&stack, ITermino);} 
+factor: 				P_A { insertar_pila(&stack, ITermino); insertar_pila(&stack, IExpresion);} 
 						expresion  { IFactor = IExpresion;}
-						P_C { ITermino =sacar_pila(&stack) ;} 						
+						P_C { IExpresion =sacar_pila(&stack) ; ITermino =sacar_pila(&stack) ;} 						
 						| 
 						atributo { IFactor = IAtributo;};
 						
