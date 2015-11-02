@@ -210,11 +210,19 @@ cuerpo_decision: 		ELSE
 						{ ICuerpoDecision = ISentencias;}
 						
 
-ciclo: 					{printf("WHILE "); }
-						WHILE condicion DO 
-							sentencias
+ciclo: 					WHILE {insertar_pila(&stack,(numTerceto)); }
+						condicion {IDecision = ICondicion;} DO 
+						sentencias
+							{
+							ICuerpoDecision = CrearTerceto ("BI",0,0);
+							Tercetos[IDecision].valor3 = (ICuerpoDecision+1);			
+							printf ("Se re-carga terceto %d con valores: %s %d %d \n", IDecision, Tercetos[IDecision].valor1, Tercetos[IDecision].valor2, Tercetos[IDecision].valor3);		
+							}
 						ENDWHILE
-						{ printf("\n"); }; 
+						{
+						Tercetos[ICuerpoDecision].valor2 = sacar_pila(&stack);
+						printf ("Se re-carga terceto %d con valores: %s %d %d \n", ICuerpoDecision, Tercetos[ICuerpoDecision].valor1, Tercetos[ICuerpoDecision].valor2, Tercetos[ICuerpoDecision].valor3);								
+						}
 
 condicion: 				comparacion {ICondicion = IComparacion; }
 						|
