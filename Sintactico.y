@@ -7,16 +7,13 @@
 #define ERROR -1
 int yystopparser=0;
 FILE  *yyin;
-FILE* pf_asm;
 
 typedef struct s_nodo {
     int valor;
     struct s_nodo *sig;
 } t_nodo;
-
 typedef t_nodo* t_pila;
 t_pila stack;
-
 typedef struct{
         int posicion;
         char nombre[30];
@@ -27,29 +24,31 @@ typedef struct{
 		
  TS_reg tabla_simb[100];
 FILE* pf_intermedio;
+FILE* pf_asm;
 int yylval;
-
 char* operador;
-
-char listaDeTipos[][100]={"."};
-char listaDeIDs[][100]={"."};
-
+char* get_nombre_cte_string_asm(char*);
+char* get_nombre_cte_real_asm(char*);
 char _listaDeTipos[][100]={"."};
 char _listaDeIDs[][100]={"."};
-
 int _cantidadTipos=0;              
 int _cantidadIDs=0;     
 char* yytext;
-
 int numberLine;
 
-
+//grabar archivo de Tercetos
 int grabar_archivo();
+
+
+//grabar archivo assembler
+int grabar_archivo_asm();
+extern int cant_entradas;
+
 void agregarTipo(char * );
 void agregarIDs(char * );
 int busca_en_TS(char*);
+int ValidarIDDeclarado(TS_reg );
 void resolverTipos();
-
 int IAtributo;
 int IFactor;
 int ITermino;
@@ -62,7 +61,6 @@ int IListaExpresiones;
 int IComparacion;
 int IComparativo;
 int ICondicion;
-
 typedef struct{
         char valor1[100];
         int valor2;
@@ -71,7 +69,6 @@ typedef struct{
  
 Tipo_Terceto Tercetos[100];
 int numTerceto=0;
-
 /** inserta un entero en la pila */
 void insertar_pila (t_pila*, int);
 /** obtiene un entero de la pila */
@@ -80,13 +77,10 @@ int sacar_pila(t_pila*);
 void crear_pila(t_pila*);
 /** destruye pila */
 void destruir_pila(t_pila*);
-
 int getCodigo(char* operador);
 void getOperador(int codigo, char* operador);
-
 void printfTabla(TS_reg);
 %}
-
 %token PROGRAM
 %token VAR ENDVAR
 %token BEGINP ENDP
@@ -95,7 +89,6 @@ void printfTabla(TS_reg);
 %token CORCH_A CORCH_C
 %token COMA
 %token REAL INTEGER STRING
-
 %token CONST_INT
 %token CONST_REAL
 %token CONST_STR
@@ -118,60 +111,45 @@ void printfTabla(TS_reg);
 %token CONCAT_STRING
 %token PUNTO_COMA
 %token TAKE
-
 %%
-
 programa: 				{ printf("Inicio COMPILADOR\n"); } 
 						PROGRAM 
 						seccion_declaracion 
 						seccion_sentencias 
 						{ printf("Compilacion Exitosa! \n");};
-
-
 seccion_declaracion: 	{ printf("Inicio DECLARACIONES\n"); }
-
 						VAR 
 						declaraciones 
 						ENDVAR 
-
 						{ printf("Fin de DECLARACIONES\n"); };
-
 declaraciones: 			declaracion | 
 						declaraciones declaracion;
-
 declaracion : 			{ printf("Declaracion listado\n"); }
 						CORCH_A lista_tipos CORCH_C DEF_TIPO CORCH_A lista_var CORCH_C
 						{ resolverTipos(); };
 				
 lista_tipos : 			tipo_var | lista_tipos COMA tipo_var;
-
 tipo_var : 				REAL 	{ agregarTipo(yytext); } | 	
 						INTEGER { agregarTipo(yytext); } | 	
 						STRING 	{ agregarTipo(yytext); } ;
-
 lista_var : 			ID {agregarIDs(yytext); printfTabla(tabla_simb[$1]); }
 						| 
 						lista_var COMA  ID  {agregarIDs(yytext); printfTabla(tabla_simb[$3]); } ;
-
 seccion_sentencias: 	{ printf("Inicio de Sentencias \n"); }
 						
 						BEGINP 
 						sentencias
 						ENDP;
-
 sentencias: 			sentencia | sentencias sentencia;
-
 sentencia : 			asignacion | decision | ciclo |  write | read | funcion_take;
 						
 						
 write: 					{ printf ("WRITE\n");}
 						WRITE atributo
 						{ printf ("FIN_WRITE\n");};
-
 read: 					{ printf ("READ\n");}
 						READ ID
 						{ printf ("FIN_READ\n");}
-
 funcion_take: 			{ printf("TAKE "); }
 						TAKE P_A 
 							operador 
@@ -183,8 +161,9 @@ funcion_take: 			{ printf("TAKE "); }
 						P_C
 						{ printf("FIN_TAKE\n"); }
 						;						
-
-asignacion: 			atributo { IAsignacion = IAtributo;}
+asignacion: 			                            atributo
+						
+						 { IAsignacion = IAtributo;}
 						OP_AS 
 						expresion 
 						{ IAsignacion =  CrearTerceto(":=",IAsignacion, IExpresion); }
@@ -196,7 +175,6 @@ decision:				{ printf("IF: "); }
 						sentencias
 						{printf("\n");}
 						cuerpo_decision;
-
 cuerpo_decision: 		{printf("ELSE \n"); }
 						ELSE  
 						sentencias 
@@ -205,14 +183,11 @@ cuerpo_decision: 		{printf("ELSE \n"); }
 						|
 						ENDIF
 						{printf("\n"); }
-
-
 ciclo: 					{printf("WHILE "); }
 						WHILE condicion DO 
 							sentencias
 						ENDWHILE
 						{ printf("\n"); }; 
-
 condicion: 				comparacion {ICondicion = IComparacion; }
 						|
 						condicion 
@@ -223,13 +198,11 @@ condicion: 				comparacion {ICondicion = IComparacion; }
 						| 
 						OP_NOT comparacion
 						{ICondicion = CrearTerceto("NOT", IComparacion,0);};
-
 comparacion:  			expresion  {IComparacion = IExpresion;}
 						OP_COMPARACION {insertar_pila(&stack, getCodigo(yytext));}
 						comparativo {getOperador(sacar_pila(&stack), operador); 
 									IComparacion = CrearTerceto(operador,IComparacion,IComparativo );}
 						;
-
 comparativo: 			expresion {IComparativo = IExpresion;}
 						| 
 						lista_expresiones { IComparativo = IListaExpresiones;}
@@ -238,7 +211,6 @@ comparativo: 			expresion {IComparativo = IExpresion;}
 lista_expresiones: 		CORCH_A 
 						contenido_l_expr 
 						{ IListaExpresiones = IContenidoExp ;}; 
-
 contenido_l_expr: 		CORCH_C { IContenidoExp = 0; }
 						| 
 						expresiones CORCH_C { IContenidoExp = IExpresiones;};
@@ -250,7 +222,6 @@ expresiones: 			expresion {IExpresiones = IExpresion ; }
 						expresion 
 						{IExpresiones = CrearTerceto (",", IExpresiones,IExpresion);}
 						;
-
 expresion: 				termino {IExpresion = ITermino;}
 						| 
 						expresion 
@@ -258,7 +229,6 @@ expresion: 				termino {IExpresion = ITermino;}
 						termino 
 						{getOperador(sacar_pila(&stack), operador);IExpresion = CrearTerceto(operador, IExpresion,ITermino);}
 						;
-
 termino: 				factor {ITermino = IFactor;}
 						| 
 						termino 
@@ -266,7 +236,6 @@ termino: 				factor {ITermino = IFactor;}
 						factor
 						{getOperador(sacar_pila(&stack), operador);ITermino = CrearTerceto(operador, ITermino,IFactor);}
 						;
-
 factor: 				P_A { insertar_pila(&stack, ITermino); insertar_pila(&stack, IExpresion);} 
 						expresion  { IFactor = IExpresion;}
 						P_C { IExpresion =sacar_pila(&stack) ; ITermino =sacar_pila(&stack) ;} 						
@@ -275,17 +244,15 @@ factor: 				P_A { insertar_pila(&stack, ITermino); insertar_pila(&stack, IExpres
 						
 atributo: 				constante  { IAtributo =  CrearTerceto(tabla_simb[$1].nombre,0,0); }
 						| 
-						ID 	{ IAtributo = CrearTerceto(tabla_simb[$1].nombre,0,0); };
-
+						ID 	
+						{ ValidarIDDeclarado(tabla_simb[yylval]);}
+						{ IAtributo = CrearTerceto(tabla_simb[$1].nombre,0,0); };
 constante: 				CONST_INT | CONST_REAL | final_string;
-
 final_string:			CONST_STR | CONST_STR CONCAT_STRING CONST_STR ;
-
 operador: 				OP_SURES 
 						|
 						OP_MULTDIV 
 						;
-
 %%
 int main(int argc,char *argv[]) {
   operador = (char*)malloc(sizeof(char));
@@ -295,13 +262,11 @@ int main(int argc,char *argv[]) {
   else {
 	yyparse();
   }
-
   grabar_archivo(); 
-
+  grabar_archivo_asm();
   fclose(yyin);
   return 0;
 }
-
 int yyerror(char const *line)
 {
 	printf("Syntax Error en linea %d\n", numberLine);   
@@ -311,29 +276,23 @@ int yyerror(char const *line)
 void agregarTipo(char * tipo){
 	strcpy(_listaDeTipos[_cantidadTipos++],tipo);
 }
-
 void agregarIDs(char * id){
 	strcpy(_listaDeIDs[_cantidadIDs++],id);
 }
-
 void resolverTipos() {
-
 	int max = _cantidadTipos > _cantidadIDs ? _cantidadIDs : _cantidadTipos;
 	int i;
 	for (i=0; i<max; i++){
-
 		char* tipo = _listaDeTipos[i];
 		char* id = _listaDeIDs[i];
 		int posicion = busca_en_TS(id);
 		strcpy(tabla_simb[posicion].tipo, tipo);
-
 		printf("[tipo:%s][id:%s][posicion_en_ts:%d]\n",tipo,id,posicion);
 	}
 
-	_cantidadTipos	=	0;
-	_cantidadIDs 	=	0;
+	//_cantidadTipos	=	0;
+	//_cantidadIDs 	=	0;
 }
-
 int CrearTerceto( char * val1, int val2, int val3)
 {
 Tipo_Terceto nuevo;
@@ -341,46 +300,146 @@ strcpy(nuevo.valor1, val1);
 nuevo.valor2 = val2;
 nuevo.valor3 = val3;
 Tercetos[numTerceto] = nuevo;
-
 printf ("Se crea terceto %d con valores: %s %d %d \n", numTerceto, val1, val2, val3);
 numTerceto++;
 return (numTerceto-1);
 }
-
 /******************************************************/
+//Chequeamos que el tipo que le pasemos existe en los existenes, sino el id no fue declarado
+int ValidarIDDeclarado(TS_reg registroTabla)
+{
+
+    int i;
+    for(i = 0; i<_cantidadTipos; i++)
+    {
+    	 //printf("Buscando %s con %s\n",_listaDeTipos[i],registroTabla.tipo);
+          if(!strcmp(_listaDeTipos[i], registroTabla.tipo))
+          {
+  				return 1;           
+          }
+    }
+       printf("ERROR ID %s NO DECLARADO \n",registroTabla.nombre);
+          //  yyterminate();
+       		exit(1);
+            return -1;
+  
+}
 
 
 /*******************Escribir arhivo**********************/
-
-
-
-
-
 void printfTabla(TS_reg linea_tabla)
 {
 	printf("pos:%d nom:%s tipo:%s val:%s long:%d \n",linea_tabla.posicion,linea_tabla.nombre,linea_tabla.tipo,linea_tabla.valor,linea_tabla.longitud);
 }
-
 int grabar_archivo()
 {
-    int i;
-    char* TS_file = "intermedia.txt";
-    
-    if((pf_intermedio = fopen(TS_file, "w")) == NULL)
-    {
-              printf("Error al grabar el archivo de intermedio \n");
-              exit(1);
-    }
-    
-    for(i = 0; i < numTerceto; i++)
-    {
-          fprintf(pf_intermedio,"(%s,%d,%d)\n", Tercetos[i].valor1, Tercetos[i].valor2,Tercetos[i].valor3);
-    }    
-    fclose(pf_intermedio);
+     int i;
+     char* TS_file = "intermedia.txt";
+     
+     if((pf_intermedio = fopen(TS_file, "w")) == NULL)
+     {
+               printf("Error al grabar el archivo de intermedio \n");
+               exit(1);
+     }
+     
+     for(i = 0; i < numTerceto; i++)
+     {
+           fprintf(pf_intermedio,"(%s,%d,%d)\n", Tercetos[i].valor1, Tercetos[i].valor2,Tercetos[i].valor3);
+     }    
+     fclose(pf_intermedio);
 }
 
-///////////////////////////////// PILA OPERADOR ///////////////////////////////////////////////
+int grabar_archivo_asm()
+{
+     int i;
+     char aux_cte_string[31];
 
+     char* Asm_file = "Final.txt";
+     
+     if((pf_asm = fopen(Asm_file, "w")) == NULL)
+     {
+               printf("Error al grabar el archivo de intermedio \n");
+               exit(1);
+     }
+     
+      fprintf(pf_asm, ".MODEL	LARGE \n");
+	  fprintf(pf_asm, ".386 \n");
+	  fprintf(pf_asm, ".STACK 200h \n");
+	  fprintf(pf_asm, ".DATA \n");
+		for(i=0; i<cant_entradas; i++)
+		{
+			if(!strcmp(tabla_simb[i].tipo, "CONST_REAL"))
+			{
+				fprintf(pf_asm, "\t_%s dd %s \n", tabla_simb[i].nombre, tabla_simb[i].valor);
+			}
+			else if(!strcmp(tabla_simb[i].tipo, "string"))
+			{
+				strcpy(aux_cte_string, get_nombre_cte_string_asm(tabla_simb[i].nombre));
+				fprintf(pf_asm, "\t_%s db %s , '$', %d dup(?)\n", aux_cte_string, tabla_simb[i].valor, tabla_simb[i].longitud);
+			}
+			else// if(!strcmp(tabla_simb[i].tipo, "real") || !strcmp(tabla_simb[i].tipo, "integer")  )
+			{
+				fprintf(pf_asm, "\t_%s dd ? \n", tabla_simb[i].nombre);
+			}
+		}
+
+	   fprintf(pf_asm, ".CODE \n");
+	   fprintf(pf_asm, "\t mov AX,@DATA \n");
+	   fprintf(pf_asm, "\t mov DS,AX \n");
+	 /*
+		 *
+		 *
+		 *
+		*/
+	 fprintf(pf_asm, "\t mov ax, 4C00h \n");
+	 fprintf(pf_asm, "\t int 21h \n");
+	 fprintf(pf_asm, "\t END \n");
+     
+     fclose(pf_asm);
+}
+//////////////////////////////////////////////////////////////////////////
+char* get_nombre_cte_string_asm(char* cte)
+{
+	/*Para generar el nombre de la variable en asm sin espacios , comillas y cualquier otro caracter que no se pueda usar como nombre de variable*/
+	char aux[31];
+	int  i=0;
+	
+	while(*cte != '\0')
+	{
+		if(*cte != ' ' && *cte != '\"' && *cte != '.' && *cte != '+' && *cte != '-' && *cte != '*' && *cte != '/' && *cte != ','
+			&& *cte != '&' && *cte != '|' && *cte != '!' && *cte != '(' && *cte != ')' && *cte != '[' && *cte != ']'
+			&& *cte != ':' && *cte != '=' && *cte != '<' && *cte != '>' && *cte != '@' && *cte != '%' && *cte != '$')
+		{
+			aux[i] = *cte;
+			i++;
+		}
+		cte++;
+	}
+	aux[i] = '\0';
+	
+	return aux;
+}
+//////////////////////////////////////////////////////////////////////////
+char* get_nombre_cte_real_asm(char* cte)
+{
+	/*Para generar el nombre de la variable en asm sin punto*/
+	char aux[50];
+	int  i=0;
+	
+	while(*cte != '\0')
+	{
+		if(*cte != '.')
+		{
+			aux[i] = *cte;
+			i++;
+		}
+		cte++;
+	}
+	aux[i] = '\0';
+	printf("\n aux: %s\n", aux);
+	return aux;
+}
+///////////////////////////////// PILA OPERADOR ///////////////////////////////////////////////
 /** inserta un entero en la pila */
 void insertar_pila (t_pila *p, int valor) {
     // creo nodo
@@ -392,7 +451,6 @@ void insertar_pila (t_pila *p, int valor) {
     // apunto al tope de la pila
     *p = nodo;
 }
-
 /** obtiene un entero de la pila */
 int sacar_pila(t_pila *p) {
     int valor = ERROR;
@@ -405,21 +463,15 @@ int sacar_pila(t_pila *p) {
     }
     return valor;
 }
-
 /** crea una estructura de pila */
 void crear_pila(t_pila *p) {
     *p = NULL;
 }
-
 /** destruye pila */
 void destruir_pila(t_pila *p) {
     while ( ERROR != sacar_pila(p));
 }
-
 int getCodigo(char* operador){
-
-	char operadores = { "*", "/", "+", "-", "in", "==", "><", "<", ">", ">=", "=<"};
-
 
 	if(operador[0] == '*'){
 		return 1;
@@ -446,9 +498,7 @@ int getCodigo(char* operador){
 	} else {
 		return 0;
 	}
-
 }
-
 void getOperador(int codigo, char* operador){
 	if(codigo == 1){
 		strcpy(operador,"*");
