@@ -28,7 +28,7 @@ FILE* pf_asm;
 int yylval;
 char* operador;
 char* get_nombre_cte_string_asm(char*);
-char* get_nombre_cte_real_asm(char*);
+
 char _listaDeTipos[][100]={"."};
 char _listaDeIDs[][100]={"."};
 int _cantidadTipos=0;              
@@ -352,7 +352,7 @@ int grabar_archivo()
 int grabar_archivo_asm()
 {
      int i;
-     char aux_cte_string[31];
+     char aux_cte[31];
 
      char* Asm_file = "Final.txt";
      
@@ -366,20 +366,24 @@ int grabar_archivo_asm()
 	  fprintf(pf_asm, ".386 \n");
 	  fprintf(pf_asm, ".STACK 200h \n");
 	  fprintf(pf_asm, ".DATA \n");
+
 		for(i=0; i<cant_entradas; i++)
 		{
+			strcpy(aux_cte, get_nombre_cte_string_asm(tabla_simb[i].nombre));
 			if(!strcmp(tabla_simb[i].tipo, "CONST_REAL"))
 			{
-				fprintf(pf_asm, "\t_%s dd %s \n", tabla_simb[i].nombre, tabla_simb[i].valor);
+				fprintf(pf_asm, "\t_%s dd %s \n", aux_cte, tabla_simb[i].valor);
 			}
 			else if(!strcmp(tabla_simb[i].tipo, "string"))
 			{
-				strcpy(aux_cte_string, get_nombre_cte_string_asm(tabla_simb[i].nombre));
-				fprintf(pf_asm, "\t_%s db %s , '$', %d dup(?)\n", aux_cte_string, tabla_simb[i].valor, tabla_simb[i].longitud);
+				//cad1 db ìprimer cadenaî,í$í, 37 dup (?)
+
+				fprintf(pf_asm, "\t_%s db %s , '$', %d dup(?)\n", aux_cte, tabla_simb[i].valor,30 );//30 - Tabla_simb[i].longitud);
 			}
+			//Si descomentamos esto solo pone lo que sean variables
 			else// if(!strcmp(tabla_simb[i].tipo, "real") || !strcmp(tabla_simb[i].tipo, "integer")  )
 			{
-				fprintf(pf_asm, "\t_%s dd ? \n", tabla_simb[i].nombre);
+				fprintf(pf_asm, "\t_%s dd ? \n", aux_cte);
 			}
 		}
 
@@ -397,10 +401,10 @@ int grabar_archivo_asm()
      
      fclose(pf_asm);
 }
-//////////////////////////////////////////////////////////////////////////
+
 char* get_nombre_cte_string_asm(char* cte)
 {
-	/*Para generar el nombre de la variable en asm sin espacios , comillas y cualquier otro caracter que no se pueda usar como nombre de variable*/
+	/*Para quitar caracteres raros para asm*/
 	char aux[31];
 	int  i=0;
 	
@@ -419,26 +423,7 @@ char* get_nombre_cte_string_asm(char* cte)
 	
 	return aux;
 }
-//////////////////////////////////////////////////////////////////////////
-char* get_nombre_cte_real_asm(char* cte)
-{
-	/*Para generar el nombre de la variable en asm sin punto*/
-	char aux[50];
-	int  i=0;
-	
-	while(*cte != '\0')
-	{
-		if(*cte != '.')
-		{
-			aux[i] = *cte;
-			i++;
-		}
-		cte++;
-	}
-	aux[i] = '\0';
-	printf("\n aux: %s\n", aux);
-	return aux;
-}
+
 ///////////////////////////////// PILA OPERADOR ///////////////////////////////////////////////
 /** inserta un entero en la pila */
 void insertar_pila (t_pila *p, int valor) {
