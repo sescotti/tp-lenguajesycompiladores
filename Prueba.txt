@@ -1,6 +1,8 @@
 program 
 var
  [real,integer]:[i,b]
+ [integer,integer,integer,integer,integer,integer]:[id,id1,cte1,cte2,cte4,cte5]
+ [integer, integer]:[id90, id100]
 endvar
 -/ alguna especie de comentario /-
 -/ un comentario -/un comentario anidado/- /-
