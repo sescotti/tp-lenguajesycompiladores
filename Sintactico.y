@@ -430,6 +430,9 @@ void destruir_pila(t_pila *p) {
 
 int getCodigo(char* operador){
 
+	char operadores = { "*", "/", "+", "-", "in", "==", "><", "<", ">", ">=", "=<"};
+
+
 	if(operador[0] == '*'){
 		return 1;
 	} else if (operador[0] == '/'){
@@ -440,6 +443,18 @@ int getCodigo(char* operador){
 		return 4;
 	} else if (strcmp(operador,"in") == 0) {
 		return 5;
+	} else if (strcmp(operador,"==") == 0) {
+		return 6;
+	} else if (strcmp(operador,"><") == 0) {
+		return 7;
+	} else if (strcmp(operador,"<") == 0) {
+		return 8;
+	} else if (strcmp(operador,">") == 0) {
+		return 9;
+	} else if (strcmp(operador,">=") == 0) {
+		return 10;
+	} else if (strcmp(operador,"=<") == 0) {
+		return 11;
 	} else {
 		return 0;
 	}
@@ -457,5 +472,17 @@ void getOperador(int codigo, char* operador){
 		strcpy(operador,"-");
 	} else if (codigo == 5) {
 		strcpy(operador, "in");
-	}
+	} else if (codigo == 6) {
+		strcpy(operador, "==");
+	} else if (codigo == 7) {
+		strcpy(operador, "><");
+	} else if (codigo == 8) {
+		strcpy(operador, "<");
+	} else if (codigo == 9) {
+		strcpy(operador, ">");
+	} else if (codigo == 10) {
+		strcpy(operador, ">=");
+	} else if (codigo == 11) {
+		strcpy(operador, "=<");
+	} 
 }
