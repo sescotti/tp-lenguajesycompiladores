@@ -330,8 +330,8 @@ void resolverTipos() {
 		printf("[tipo:%s][id:%s][posicion_en_ts:%d]\n",tipo,id,posicion);
 	}
 
-	//_cantidadTipos	=	0;
-	//_cantidadIDs 	=	0;
+	_cantidadTipos	=	0;
+	_cantidadIDs 	=	0;
 }
 int CrearTerceto( char * val1, int val2, int val3)
 {
@@ -350,18 +350,16 @@ int ValidarIDDeclarado(TS_reg registroTabla)
 {
 
     int i;
-    for(i = 0; i<_cantidadTipos; i++)
-    {
-    	 //printf("Buscando %s con %s\n",_listaDeTipos[i],registroTabla.tipo);
-          if(!strcmp(_listaDeTipos[i], registroTabla.tipo))
-          {
-  				return 1;           
-          }
-    }
-       printf("ERROR ID %s NO DECLARADO \n",registroTabla.nombre);
-          //  yyterminate();
-       		exit(1);
-            return -1;
+	 printf("Buscando ID con %s\n",registroTabla.tipo);
+      if(strcmp("ID", registroTabla.tipo) == 0)
+      {
+      	printf("ERROR ID %s NO DECLARADO \n",registroTabla.nombre);
+      //  yyterminate();
+   		exit(1);
+        return -1;
+      }
+
+   	return 1;  
   
 }
 
@@ -410,18 +408,19 @@ int grabar_archivo_asm()
 		for(i=0; i<cant_entradas; i++)
 		{
 			strcpy(aux_cte, get_nombre_cte_string_asm(tabla_simb[i].nombre));
-			if(!strcmp(tabla_simb[i].tipo, "CONST_REAL"))
-			{
-				fprintf(pf_asm, "\t_%s dd %s \n", aux_cte, tabla_simb[i].valor);
-			}
-			else if(!strcmp(tabla_simb[i].tipo, "string"))
+			//if(!strcmp(tabla_simb[i].tipo, "CONST_REAL"))
+			//{
+			//	fprintf(pf_asm, "\t_%s dd %s \n", aux_cte, tabla_simb[i].valor);
+			//}
+			//else 
+				if(!strcmp(tabla_simb[i].tipo, "string"))
 			{
 				//cad1 db ìprimer cadenaî,í$í, 37 dup (?)
-
-				fprintf(pf_asm, "\t_%s db %s , '$', %d dup(?)\n", aux_cte, tabla_simb[i].valor,30 );//30 - Tabla_simb[i].longitud);
+				//_aux1 db MAXTEXTSIZE dup(?), ë$í 
+				fprintf(pf_asm, "\t_%s db  %d dup (?) '$'\n", aux_cte,30 );//30 - Tabla_simb[i].longitud);
 			}
 			//Si descomentamos esto solo pone lo que sean variables
-			else// if(!strcmp(tabla_simb[i].tipo, "real") || !strcmp(tabla_simb[i].tipo, "integer")  )
+			else if(!strcmp(tabla_simb[i].tipo, "real") || !strcmp(tabla_simb[i].tipo, "integer")  )
 			{
 				fprintf(pf_asm, "\t_%s dd ? \n", aux_cte);
 			}
