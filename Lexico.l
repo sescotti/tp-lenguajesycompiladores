@@ -64,9 +64,9 @@ MULT_DIV	              "*"|"/"
 ")"				    { return P_C;}
 ","				    { return COMA;}
 "++"			    { return CONCAT_STRING; }
-"=<"          { return OP_COMPARACION; }
+"<="          { return OP_COMPARACION; }
 ">="          { return OP_COMPARACION; }
-"><"          { return OP_COMPARACION; }
+"<>"          { return OP_COMPARACION; }
 "<"           { return OP_COMPARACION; }
 "=="          { return OP_COMPARACION; }
 ">"           { return OP_COMPARACION; }
