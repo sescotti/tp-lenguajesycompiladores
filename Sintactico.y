@@ -12,10 +12,8 @@ typedef struct s_nodo {
     int valor;
     struct s_nodo *sig;
 } t_nodo;
-
 typedef t_nodo* t_pila;
 t_pila stack;
-
 typedef struct{
         int posicion;
         char nombre[30];
@@ -28,17 +26,14 @@ typedef struct{
 FILE* pf_intermedio;
 FILE* pf_asm;
 int yylval;
-
 char* operador;
 char* get_nombre_cte_string_asm(char*);
 
 char _listaDeTipos[][100]={"."};
 char _listaDeIDs[][100]={"."};
-
-int _cantidadTipos=0;              
+int _cantidadTipos=0;      
 int _cantidadIDs=0;     
 char* yytext;
-
 int numberLine;
 
 //grabar archivo de Tercetos
@@ -66,12 +61,6 @@ int IListaExpresiones;
 int IComparacion;
 int IComparativo;
 int ICondicion;
-int IDecision;
-int ICuerpoDecision;
-int ICiclo;
-int ISentencias;
-int ISentencia;
-
 typedef struct{
         char valor1[100];
         int valor2;
@@ -151,23 +140,18 @@ seccion_sentencias: 	{ printf("Inicio de Sentencias \n"); }
 						BEGINP 
 						sentencias
 						ENDP;
-
-sentencias: 			sentencia {ISentencias = ISentencia;}
-						| 
-						sentencias sentencia {ISentencias = ISentencia;};
-
-sentencia : 			asignacion {ISentencia = IAsignacion;}
-						| decision {ISentencia = IDecision;}
-						| ciclo {ISentencia = ICiclo;}
-						|  write {ISentencia = 0;}
-						| read {ISentencia = 0;}
-						| funcion_take {ISentencia = 0;};
+sentencias: 			sentencia | sentencias sentencia;
+sentencia : 			asignacion | decision | ciclo |  write | read | funcion_take;
 						
-write: 					WRITE atributo
-
-read: 					READ ID
 						
-funcion_take: 			TAKE P_A 
+write: 					{ printf ("WRITE\n");}
+						WRITE atributo
+						{ printf ("FIN_WRITE\n");};
+read: 					{ printf ("READ\n");}
+						READ ID
+						{ printf ("FIN_READ\n");}
+funcion_take: 			{ printf("TAKE "); }
+						TAKE P_A 
 							operador 
 						PUNTO_COMA 
 							CONST_INT
@@ -177,45 +161,33 @@ funcion_take: 			TAKE P_A
 						P_C
 						{ printf("FIN_TAKE\n"); }
 						;						
-
-asignacion: 			atributo { IAsignacion = IAtributo;}
+asignacion: 			                            atributo
+						
+						 { IAsignacion = IAtributo;}
 						OP_AS 
 						expresion 
 						{ IAsignacion =  CrearTerceto(":=",IAsignacion, IExpresion); }
 						;
 						
-decision:				IF condicion {IDecision = ICondicion;}
-						THEN 
+decision:				{ printf("IF: "); }
+						IF condicion THEN 
+						{printf("\n");}
 						sentencias
-						cuerpo_decision {IDecision = ICuerpoDecision;}
-						;
-
-cuerpo_decision: 		ELSE  
-							{
-								ICuerpoDecision = CrearTerceto ("BI",0,0);
-								Tercetos[IDecision].valor3 = (ICuerpoDecision+1);			
-								printf ("Se re-carga terceto %d con valores: %s %d %d \n", IDecision, Tercetos[IDecision].valor1, Tercetos[IDecision].valor2, Tercetos[IDecision].valor3);		
-								}
+						{printf("\n");}
+						cuerpo_decision;
+cuerpo_decision: 		{printf("ELSE \n"); }
+						ELSE  
 						sentencias 
-							{ 	Tercetos[ICuerpoDecision].valor2 = (ISentencias+1);			
-								printf ("Se re-carga terceto %d con valores: %s %d %d \n", ICuerpoDecision, Tercetos[ICuerpoDecision].valor1, Tercetos[ICuerpoDecision].valor2, Tercetos[ICuerpoDecision].valor3);		
-							}
-						ENDIF
-						{ICuerpoDecision= ISentencias;}						
+						ENDIF 
+						{printf("\n"); }
 						|
-						{	Tercetos[IDecision].valor3 = (ISentencias+1);			
-							printf ("Se re-carga terceto %d con valores: %s %d %d \n", IDecision, Tercetos[IDecision].valor1, Tercetos[IDecision].valor2, Tercetos[IDecision].valor3);		
-						}
 						ENDIF
-						{ ICuerpoDecision = ISentencias;}
-						
-
+						{printf("\n"); }
 ciclo: 					{printf("WHILE "); }
 						WHILE condicion DO 
 							sentencias
 						ENDWHILE
 						{ printf("\n"); }; 
-
 condicion: 				comparacion {ICondicion = IComparacion; }
 						|
 						condicion 
@@ -226,16 +198,11 @@ condicion: 				comparacion {ICondicion = IComparacion; }
 						| 
 						OP_NOT comparacion
 						{ICondicion = CrearTerceto("NOT", IComparacion,0);};
-
 comparacion:  			expresion  {IComparacion = IExpresion;}
 						OP_COMPARACION {insertar_pila(&stack, getCodigo(yytext));}
-						comparativo 
-						{
-							IComparacion = CrearTerceto("CMP",IComparacion,IComparativo );
-							getOperador(sacar_pila(&stack), operador); 
-							IComparacion = CrearTerceto(operador,IComparacion,0 );}
+						comparativo {getOperador(sacar_pila(&stack), operador); 
+									IComparacion = CrearTerceto(operador,IComparacion,IComparativo );}
 						;
-
 comparativo: 			expresion {IComparativo = IExpresion;}
 						| 
 						lista_expresiones { IComparativo = IListaExpresiones;}
@@ -244,7 +211,6 @@ comparativo: 			expresion {IComparativo = IExpresion;}
 lista_expresiones: 		CORCH_A 
 						contenido_l_expr 
 						{ IListaExpresiones = IContenidoExp ;}; 
-
 contenido_l_expr: 		CORCH_C { IContenidoExp = 0; }
 						| 
 						expresiones CORCH_C { IContenidoExp = IExpresiones;};
@@ -256,7 +222,6 @@ expresiones: 			expresion {IExpresiones = IExpresion ; }
 						expresion 
 						{IExpresiones = CrearTerceto (",", IExpresiones,IExpresion);}
 						;
-
 expresion: 				termino {IExpresion = ITermino;}
 						| 
 						expresion 
@@ -264,7 +229,6 @@ expresion: 				termino {IExpresion = ITermino;}
 						termino 
 						{getOperador(sacar_pila(&stack), operador);IExpresion = CrearTerceto(operador, IExpresion,ITermino);}
 						;
-
 termino: 				factor {ITermino = IFactor;}
 						| 
 						termino 
@@ -272,7 +236,6 @@ termino: 				factor {ITermino = IFactor;}
 						factor
 						{getOperador(sacar_pila(&stack), operador);ITermino = CrearTerceto(operador, ITermino,IFactor);}
 						;
-
 factor: 				P_A { insertar_pila(&stack, ITermino); insertar_pila(&stack, IExpresion);} 
 						expresion  { IFactor = IExpresion;}
 						P_C { IExpresion =sacar_pila(&stack) ; ITermino =sacar_pila(&stack) ;} 						
@@ -285,14 +248,11 @@ atributo: 				constante  { IAtributo =  CrearTerceto(tabla_simb[$1].nombre,0,0);
 						{ ValidarIDDeclarado(tabla_simb[yylval]);}
 						{ IAtributo = CrearTerceto(tabla_simb[$1].nombre,0,0); };
 constante: 				CONST_INT | CONST_REAL | final_string;
-
 final_string:			CONST_STR | CONST_STR CONCAT_STRING CONST_STR ;
-
 operador: 				OP_SURES 
 						|
 						OP_MULTDIV 
 						;
-
 %%
 int main(int argc,char *argv[]) {
   operador = (char*)malloc(sizeof(char));
@@ -316,9 +276,11 @@ int yyerror(char const *line)
 void agregarTipo(char * tipo){
 	strcpy(_listaDeTipos[_cantidadTipos++],tipo);
 }
+
 void agregarIDs(char * id){
 	strcpy(_listaDeIDs[_cantidadIDs++],id);
 }
+
 void resolverTipos() {
 	int max = _cantidadTipos > _cantidadIDs ? _cantidadIDs : _cantidadTipos;
 	int i;
@@ -330,8 +292,8 @@ void resolverTipos() {
 		printf("[tipo:%s][id:%s][posicion_en_ts:%d]\n",tipo,id,posicion);
 	}
 
-	//_cantidadTipos	=	0;
-	//_cantidadIDs 	=	0;
+	_cantidadTipos	=	0;
+	_cantidadIDs 	=	0;
 }
 int CrearTerceto( char * val1, int val2, int val3)
 {
@@ -350,18 +312,16 @@ int ValidarIDDeclarado(TS_reg registroTabla)
 {
 
     int i;
-    for(i = 0; i<_cantidadTipos; i++)
-    {
-    	 //printf("Buscando %s con %s\n",_listaDeTipos[i],registroTabla.tipo);
-          if(!strcmp(_listaDeTipos[i], registroTabla.tipo))
-          {
-  				return 1;           
-          }
-    }
-       printf("ERROR ID %s NO DECLARADO \n",registroTabla.nombre);
-          //  yyterminate();
-       		exit(1);
-            return -1;
+	 printf("Buscando ID con %s\n",registroTabla.tipo);
+      if(strcmp("ID", registroTabla.tipo) == 0)
+      {
+      	printf("ERROR ID %s NO DECLARADO \n",registroTabla.nombre);
+      //  yyterminate();
+   		exit(1);
+        return -1;
+      }
+
+   	return 1;  
   
 }
 
@@ -417,8 +377,7 @@ int grabar_archivo_asm()
 			else if(!strcmp(tabla_simb[i].tipo, "string"))
 			{
 				//cad1 db ìprimer cadenaî,í$í, 37 dup (?)
-
-				fprintf(pf_asm, "\t_%s db %s , '$', %d dup(?)\n", aux_cte, tabla_simb[i].valor,30 );//30 - Tabla_simb[i].longitud);
+				fprintf(pf_asm, "\t_%s db %s , '$', %d dup (?)\n", aux_cte, tabla_simb[i].valor,30 );//30 - Tabla_simb[i].longitud);
 			}
 			//Si descomentamos esto solo pone lo que sean variables
 			else// if(!strcmp(tabla_simb[i].tipo, "real") || !strcmp(tabla_simb[i].tipo, "integer")  )
@@ -510,7 +469,7 @@ int getCodigo(char* operador){
 		return 5;
 	} else if (strcmp(operador,"==") == 0) {
 		return 6;
-	} else if (strcmp(operador,"<>") == 0) {
+	} else if (strcmp(operador,"><") == 0) {
 		return 7;
 	} else if (strcmp(operador,"<") == 0) {
 		return 8;
@@ -518,7 +477,7 @@ int getCodigo(char* operador){
 		return 9;
 	} else if (strcmp(operador,">=") == 0) {
 		return 10;
-	} else if (strcmp(operador,"<=") == 0) {
+	} else if (strcmp(operador,"=<") == 0) {
 		return 11;
 	} else {
 		return 0;
@@ -536,16 +495,16 @@ void getOperador(int codigo, char* operador){
 	} else if (codigo == 5) {
 		strcpy(operador, "in");
 	} else if (codigo == 6) {
-		strcpy(operador, "BNE");
+		strcpy(operador, "==");
 	} else if (codigo == 7) {
-		strcpy(operador, "BEQ");
+		strcpy(operador, "><");
 	} else if (codigo == 8) {
-		strcpy(operador, "BGE");
+		strcpy(operador, "<");
 	} else if (codigo == 9) {
-		strcpy(operador, "BLE");
+		strcpy(operador, ">");
 	} else if (codigo == 10) {
-		strcpy(operador, "BLT");
+		strcpy(operador, ">=");
 	} else if (codigo == 11) {
-		strcpy(operador, "BGT");
+		strcpy(operador, "=<");
 	} 
 }
