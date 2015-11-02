@@ -61,6 +61,7 @@ int IContenidoExp;
 int IListaExpresiones;
 int IComparacion;
 int IComparativo;
+int ICondicion;
 
 typedef struct{
         char valor1[100];
@@ -160,7 +161,7 @@ seccion_sentencias: 	{ printf("Inicio de Sentencias \n"); }
 
 sentencias: 			sentencia | sentencias sentencia;
 
-sentencia : 			asignacion | decision | ciclo | iteracion | write | read | funcion_take;
+sentencia : 			asignacion | decision | ciclo |  write | read | funcion_take;
 						
 						
 write: 					{ printf ("WRITE\n");}
@@ -212,41 +213,28 @@ ciclo: 					{printf("WHILE "); }
 						ENDWHILE
 						{ printf("\n"); }; 
 
-iteracion: 				{printf("FOR:"); }
-						FOR iterador DO 
-							sentencias 
-						ENDFOR
-						;
-
-condicion: 				comparacion
+condicion: 				comparacion {ICondicion = IComparacion; }
 						|
 						condicion 
-						OP_LOG { printf(" %s ",yytext ); }
-						comparacion 						
+						OP_LOG { insertar_pila(&stack, getCodigo(yytext));}
+						comparacion 				
+						{getOperador(sacar_pila(&stack), operador);
+						ICondicion = CrearTerceto(operador, ICondicion,IComparacion);}
 						| 
-						{ printf(" NOT "); }
-						OP_NOT comparacion;
+						OP_NOT comparacion
+						{ICondicion = CrearTerceto("NOT", IComparacion,0);};
 
-comparacion:  			{ printf(" ENTRO A comparacion " ); }
-						expresion  {IComparacion = IExpresion;}
-						OP_COMPARACION {insertar_pila(&stack, getCodigo(yytext)); printf("Operdaor %s", yytext);}
-						comparativo 
-						{getOperador(sacar_pila(&stack), operador); 
-						IComparacion = CrearTerceto(operador,IComparacion,IComparativo );}
+comparacion:  			expresion  {IComparacion = IExpresion;}
+						OP_COMPARACION {insertar_pila(&stack, getCodigo(yytext));}
+						comparativo {getOperador(sacar_pila(&stack), operador); 
+									IComparacion = CrearTerceto(operador,IComparacion,IComparativo );}
 						;
 
 comparativo: 			expresion {IComparativo = IExpresion;}
 						| 
 						lista_expresiones { IComparativo = IListaExpresiones;}
 						;
-
-iterador: 				{ printf(" iterador " ); }
-						atributo {IIterador = IAtributo ;}
-						IN {printf ("IN");}
-						lista_expresiones
-						{ IIterador = CrearTerceto ("IN",IIterador,IListaExpresiones);}
-						;
-						
+					
 lista_expresiones: 		CORCH_A 
 						contenido_l_expr 
 						{ IListaExpresiones = IContenidoExp ;}; 
@@ -430,9 +418,6 @@ void destruir_pila(t_pila *p) {
 
 int getCodigo(char* operador){
 
-	char operadores = { "*", "/", "+", "-", "in", "==", "><", "<", ">", ">=", "=<"};
-
-
 	if(operador[0] == '*'){
 		return 1;
 	} else if (operador[0] == '/'){
@@ -443,18 +428,6 @@ int getCodigo(char* operador){
 		return 4;
 	} else if (strcmp(operador,"in") == 0) {
 		return 5;
-	} else if (strcmp(operador,"==") == 0) {
-		return 6;
-	} else if (strcmp(operador,"><") == 0) {
-		return 7;
-	} else if (strcmp(operador,"<") == 0) {
-		return 8;
-	} else if (strcmp(operador,">") == 0) {
-		return 9;
-	} else if (strcmp(operador,">=") == 0) {
-		return 10;
-	} else if (strcmp(operador,"=<") == 0) {
-		return 11;
 	} else {
 		return 0;
 	}
@@ -472,17 +445,5 @@ void getOperador(int codigo, char* operador){
 		strcpy(operador,"-");
 	} else if (codigo == 5) {
 		strcpy(operador, "in");
-	} else if (codigo == 6) {
-		strcpy(operador, "==");
-	} else if (codigo == 7) {
-		strcpy(operador, "><");
-	} else if (codigo == 8) {
-		strcpy(operador, "<");
-	} else if (codigo == 9) {
-		strcpy(operador, ">");
-	} else if (codigo == 10) {
-		strcpy(operador, ">=");
-	} else if (codigo == 11) {
-		strcpy(operador, "=<");
 	} 
 }
