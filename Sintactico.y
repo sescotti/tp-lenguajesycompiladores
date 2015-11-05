@@ -24,7 +24,7 @@ typedef struct{
         int longitud;
         } TS_reg;
 		
- TS_reg tabla_simb[100];
+TS_reg tabla_simb[100];
 FILE* pf_intermedio;
 FILE* pf_asm;
 int yylval;
@@ -49,6 +49,7 @@ int grabar_archivo();
 int grabar_archivo_asm();
 extern int cant_entradas;
 
+int CopiarTercetos(int, int);
 void agregarTipo(char * );
 void agregarIDs(char * );
 int busca_en_TS(char*);
@@ -72,14 +73,19 @@ int ICiclo;
 int ISentencias;
 int ISentencia;
 
+int limiteTake;
+
 typedef struct{
         char valor1[100];
         int valor2;
         int valor3;
 } Tipo_Terceto;
- 
 Tipo_Terceto Tercetos[100];
 int numTerceto=0;
+
+int ListaExpresiones[100];
+int numListaExpresiones = 0;
+
 /** inserta un entero en la pila */
 void insertar_pila (t_pila*, int);
 /** obtiene un entero de la pila */
@@ -170,12 +176,22 @@ read: 					READ ID
 funcion_take: 			TAKE P_A 
 							operador 
 						PUNTO_COMA 
-							CONST_INT
-							{printf("%s",yytext);}
+							CONST_INT {limiteTake = yylval;  }
 						PUNTO_COMA 
 							lista_expresiones 
+							{
+							getOperador(sacar_pila(&stack), operador); 
+							int acumulador, valor, cantidad;
+							cantidad = 2;
+							acumulador = ListaExpresiones[0];
+							valor = ListaExpresiones[1];
+							while ( cantidad <= limiteTake){
+								acumulador = CrearTerceto(operador, acumulador , valor);
+								valor = ListaExpresiones[cantidad];	
+								cantidad++;
+								}
+							}
 						P_C
-						{ printf("FIN_TAKE\n"); }
 						;						
 
 asignacion: 			atributo { IAsignacion = IAtributo;}
@@ -213,14 +229,39 @@ cuerpo_decision: 		ELSE
 ciclo: 					WHILE {insertar_pila(&stack,(numTerceto)); }
 						condicion {IDecision = ICondicion;} DO 
 						sentencias
-							{
-							ICuerpoDecision = CrearTerceto ("BI",0,0);
-							Tercetos[IDecision].valor3 = (ICuerpoDecision+1);			
-							printf ("Se re-carga terceto %d con valores: %s %d %d \n", IDecision, Tercetos[IDecision].valor1, Tercetos[IDecision].valor2, Tercetos[IDecision].valor3);		
+						{
+							if (numListaExpresiones>0){
+								/*PARA EL CICLO ESPECIAL */
+								Tercetos[IDecision].valor3 = numTerceto;
 							}
+							else{
+								/*PARA EL CICLO COMUN*/
+								ICuerpoDecision = CrearTerceto ("BI",0,0);
+								Tercetos[IDecision].valor3 = (ICuerpoDecision+1);
+							}										
+							printf ("Se re-carga terceto %d con valores: %s %d %d \n", IDecision, Tercetos[IDecision].valor1, Tercetos[IDecision].valor2, Tercetos[IDecision].valor3);									
+						}
 						ENDWHILE
 						{
-						Tercetos[ICuerpoDecision].valor2 = sacar_pila(&stack);
+						if (numListaExpresiones>0){
+								/*PARA EL CICLO ESPECIAL */
+								int x, finSentencias, iniSentencias, operador;
+								finSentencias = numTerceto;
+								iniSentencias = IDecision +1 ;
+								operador = sacar_pila(&stack);
+								for (x=1; x<numListaExpresiones; x++){
+									int CompAuxiliar;
+									CompAuxiliar = CrearTerceto("CMP",operador, ListaExpresiones[x]);
+									CompAuxiliar = CrearTerceto("BNE",CompAuxiliar,0 );	
+									CopiarTercetos(iniSentencias, finSentencias);
+									Tercetos[CompAuxiliar].valor3 = numTerceto;
+								}
+								numListaExpresiones=0;
+						}
+						else{
+							/*PARA EL CICLO COMUN*/
+							Tercetos[ICuerpoDecision].valor2 = sacar_pila(&stack);
+						}						
 						printf ("Se re-carga terceto %d con valores: %s %d %d \n", ICuerpoDecision, Tercetos[ICuerpoDecision].valor1, Tercetos[ICuerpoDecision].valor2, Tercetos[ICuerpoDecision].valor3);								
 						}
 
@@ -239,9 +280,10 @@ comparacion:  			expresion  {IComparacion = IExpresion;}
 						OP_COMPARACION {insertar_pila(&stack, getCodigo(yytext));}
 						comparativo 
 						{
-							IComparacion = CrearTerceto("CMP",IComparacion,IComparativo );
-							getOperador(sacar_pila(&stack), operador); 
-							IComparacion = CrearTerceto(operador,IComparacion,0 );}
+							getOperador(sacar_pila(&stack), operador);
+							IComparacion = CrearTerceto("CMP",IComparacion,IComparativo );							 
+							IComparacion = CrearTerceto(operador,IComparacion,0 );							
+						}
 						;
 
 comparativo: 			expresion {IComparativo = IExpresion;}
@@ -257,12 +299,17 @@ contenido_l_expr: 		CORCH_C { IContenidoExp = 0; }
 						| 
 						expresiones CORCH_C { IContenidoExp = IExpresiones;};
 						
-expresiones: 			expresion {IExpresiones = IExpresion ; }
+expresiones: 			expresion {IExpresiones = IExpresion ; numListaExpresiones = 0; 
+									ListaExpresiones[numListaExpresiones] = IExpresion;
+									numListaExpresiones++;}
 						| 
 						expresiones 
 						COMA 
 						expresion 
-						{IExpresiones = CrearTerceto (",", IExpresiones,IExpresion);}
+						{ ListaExpresiones[numListaExpresiones] = IExpresion; 
+						numListaExpresiones++;
+						IExpresiones = ListaExpresiones[0];
+						/*IExpresiones = CrearTerceto (",", IExpresiones,IExpresion);*/}
 						;
 
 expresion: 				termino {IExpresion = ITermino;}
@@ -292,13 +339,14 @@ atributo: 				constante  { IAtributo =  CrearTerceto(tabla_simb[$1].nombre,0,0);
 						ID 	
 						{ ValidarIDDeclarado(tabla_simb[yylval]);}
 						{ IAtributo = CrearTerceto(tabla_simb[$1].nombre,0,0); };
+
 constante: 				CONST_INT | CONST_REAL | final_string;
 
 final_string:			CONST_STR | CONST_STR CONCAT_STRING CONST_STR ;
 
-operador: 				OP_SURES 
+operador: 				OP_SURES { insertar_pila(&stack, getCodigo(yytext)); }
 						|
-						OP_MULTDIV 
+						OP_MULTDIV  { insertar_pila(&stack, getCodigo(yytext)); }
 						;
 
 %%
@@ -352,6 +400,23 @@ printf ("Se crea terceto %d con valores: %s %d %d \n", numTerceto, val1, val2, v
 numTerceto++;
 return (numTerceto-1);
 }
+
+int CopiarTercetos( int Inicio, int Fin)
+{
+int x;
+for ( x=Inicio ; x<Fin; x++){
+	Tipo_Terceto nuevo;
+	strcpy(nuevo.valor1, Tercetos[x].valor1);
+	nuevo.valor2 = Tercetos[x].valor2;
+	nuevo.valor3 = Tercetos[x].valor3;
+
+	Tercetos[numTerceto] = nuevo;
+	numTerceto++;
+}
+return (numTerceto-1);
+}
+
+
 /******************************************************/
 //Chequeamos que el tipo que le pasemos existe en los existenes, sino el id no fue declarado
 int ValidarIDDeclarado(TS_reg registroTabla)
@@ -541,7 +606,7 @@ void getOperador(int codigo, char* operador){
 	} else if(codigo == 4){
 		strcpy(operador,"-");
 	} else if (codigo == 5) {
-		strcpy(operador, "in");
+		strcpy(operador, "BNE");
 	} else if (codigo == 6) {
 		strcpy(operador, "BNE");
 	} else if (codigo == 7) {
